@@ -55,27 +55,30 @@
                 });
 
                 // --- NUEVA LÓGICA: Botón para alternar etiquetas ---
-                const toggleButton = document.querySelector('#toggle-button');
-                const labels = document.querySelectorAll('.label-group');
-                let labelsVisible = false; // Estado inicial: oculto
+                // Esperamos un momento para que la entidad esté lista
+                setTimeout(() => {
+                    const toggleButton = document.querySelector('#toggle-button');
+                    const labels = document.querySelectorAll('.label-group');
+                    let labelsVisible = false; // Estado inicial: oculto
 
-                if (toggleButton) {
-                    toggleButton.addEventListener('click', function (evt) {
-                        // Detiene la propagación del evento para evitar clics accidentales
-                        evt.stopPropagation();
-                        console.log('Botón de alternar presionado');
-                        
-                        // Alterna el estado
-                        labelsVisible = !labelsVisible; 
-                        
-                        // Aplica el nuevo estado a todas las etiquetas
-                        labels.forEach(function(label) {
-                            label.setAttribute('visible', labelsVisible);
+                    if (toggleButton) {
+                        toggleButton.addEventListener('click', function (evt) {
+                            // Detiene la propagación del evento para evitar clics accidentales
+                            evt.stopPropagation();
+                            console.log('Botón de alternar presionado');
+                            
+                            // Alterna el estado
+                            labelsVisible = !labelsVisible; 
+                            
+                            // Aplica el nuevo estado a todas las etiquetas
+                            labels.forEach(function(label) {
+                                label.setAttribute('visible', labelsVisible);
+                            });
                         });
-                    });
-                } else {
-                    console.error('No se encontró el botón #toggle-button');
-                }
+                    } else {
+                        console.error('No se encontró el botón #toggle-button');
+                    }
+                }, 500); // Pequeña espera para asegurar que todo esté cargado
             }
         });
     </script>
@@ -119,25 +122,27 @@
                 visible="false"
                 rotation="-90 0 0" 
                 position="0 0 0"
-                scale="0.2 0.2 0.2"> 
+                scale="0.1 0.1 0.1"> 
                 
                 <a-gltf-model 
                     src="cow.glb" 
                     id="campus-model"
                     position="0 0 0" 
                     scale=".2 .2 .2"
-                    rotation="90 0 0"> 
+                    rotation="-90 0 0"> 
                 </a-gltf-model>
 
                 <!-- 
                     NUEVO: Botón para mostrar/ocultar etiquetas.
                     Se le da la clase 'clickable' para que el raycaster lo detecte.
+                    CAMBIO: Añadida rotación de -90 en X para que quede plano.
                 -->
                 <a-entity 
                     id="toggle-button" 
                     class="clickable" 
                     position="0 2.5 0" 
-                    scale="3 3 3">
+                    scale="3 3 3"
+                    rotation="-90 0 0">
                     <!-- El botón físico -->
                     <a-cylinder 
                         radius="0.5" 
@@ -239,6 +244,4 @@
     </a-scene>
 </body>
 </html>
-
-
 
