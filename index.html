@@ -35,8 +35,9 @@
             init: function () {
                 const marker = document.querySelector('a-marker');
                 const self = this;
+                const sceneEl = document.querySelector('a-scene');
+                const labels = document.querySelectorAll('.label-group');
                 let labelsVisible = false; // Estado inicial: oculto
-                let buttonListenerAttached = false; // Control para añadir el listener una sola vez
 
                 if (!marker) {
                     console.error('El marcador AR no se encontró en la escena.');
@@ -48,32 +49,6 @@
                     console.log('Marcador Encontrado');
                     document.getElementById('status-message').textContent = '¡Mapa 3D Cargado! Toca el botón azul para ver la info.';
                     self.el.setAttribute('visible', true);
-
-                    // --- NUEVA LÓGICA: Botón para alternar etiquetas ---
-                    // Se activa solo la primera vez que se encuentra el marcador
-                    if (!buttonListenerAttached) {
-                        const toggleButton = document.querySelector('#toggle-button-geometry'); // Apunta al cilindro
-                        const labels = document.querySelectorAll('.label-group');
-
-                        if (toggleButton) {
-                            toggleButton.addEventListener('click', function (evt) {
-                                // Detiene la propagación del evento para evitar clics accidentales
-                                evt.stopPropagation();
-                                console.log('Botón de alternar presionado');
-                                
-                                // Alterna el estado
-                                labelsVisible = !labelsVisible; 
-                                
-                                // Aplica el nuevo estado a todas las etiquetas
-                                labels.forEach(function(label) {
-                                    label.setAttribute('visible', labelsVisible);
-                                });
-                            });
-                            buttonListenerAttached = true; // Marca como añadido
-                        } else {
-                            console.error('No se encontró el botón #toggle-button-geometry');
-                        }
-                    }
                 });
 
                 marker.addEventListener('markerLost', function() {
@@ -83,9 +58,26 @@
                     
                     // Resetea la visibilidad de las etiquetas
                     labelsVisible = false;
-                    document.querySelectorAll('.label-group').forEach(function(label) {
+                    labels.forEach(function(label) {
                         label.setAttribute('visible', false);
                     });
+                });
+
+                // --- LÓGICA DE CLIC MEJORADA: Escuchar clics en la escena ---
+                sceneEl.addEventListener('click', function (evt) {
+                    // Verificamos si el clic intersectó con el botón
+                    const intersectedEl = evt.detail.intersectedEl;
+                    if (intersectedEl && intersectedEl.id === 'toggle-button-geometry') {
+                        console.log('Botón de alternar presionado (detectado por la escena)');
+                        
+                        // Alterna el estado
+                        labelsVisible = !labelsVisible; 
+                        
+                        // Aplica el nuevo estado a todas las etiquetas
+                        labels.forEach(function(label) {
+                            label.setAttribute('visible', labelsVisible);
+                        });
+                    }
                 });
             }
         });
@@ -145,17 +137,17 @@
 
                 <!-- 
                     NUEVO: Botón para mostrar/ocultar etiquetas.
+                    CAMBIO: Rotación de la entidad padre a 0 0 0 (para que esté plana).
                     CAMBIO: Escala del botón reducida (de 3 a 1.2)
-                    CAMBIO: 'class="clickable"' quitado de esta entidad padre.
                 -->
                 <a-entity 
                     id="toggle-button" 
                     position="0 2.5 0" 
                     scale="1.2 1.2 1.2"
-                    rotation="-90 0 0">
+                    rotation="0 0 0">
                     <!-- 
-                        CAMBIO: Añadido 'id="toggle-button-geometry"' y 'class="clickable"'
-                        para que el raycaster lo detecte.
+                        CAMBIO: Cilindro rotado 90 grados en X para que quede plano.
+                        ID y Clase movidos aquí.
                     -->
                     <a-cylinder 
                         id="toggle-button-geometry"
@@ -163,11 +155,12 @@
                         radius="0.5" 
                         height="0.2" 
                         color="#0077FF"
-                        opacity="0.9">
+                        opacity="0.9"
+                        rotation="90 0 0">
                     </a-cylinder>
                     <!-- 
-                        CAMBIO: Texto movido a Y negativa (-0.15) 
-                        y rotado 180 grados para que mire "hacia arriba".
+                        CAMBIO: Texto posicionado sobre el cilindro (Y=0.11)
+                        y sin rotación.
                     -->
                     <a-text
                         value="Ver Info"
@@ -176,8 +169,8 @@
                         width="2"
                         font="roboto"
                         shader="msdf"
-                        position="0 -0.15 0"
-                        rotation="180 0 0">
+                        position="0 0.11 0"
+                        rotation="0 0 0">
                     </a-text>
                 </a-entity>
 
@@ -254,6 +247,16 @@
 
             </a-entity>
         </a-marker>
+        
+        <!-- 
+            CAMBIO: Se reemplaza '<a-entity camera>' por '<a-camera-static>' 
+            para asegurar la compatibilidad con el cursor.
+        -->
+        <a-camera-static></a-camera-static>
+    </a-scene>
+</body>
+</html>
+
 
 
 
