@@ -92,10 +92,6 @@
         Por favor, permite el acceso a la cámara y escanea el Código QR del campus.
     </div>
 
-    <!-- 
-        CAMBIO: El 'cursor' y 'raycaster' se mueven a la entidad de la cámara.
-        Se quitan de la escena.
-    -->
     <a-scene 
         id="ar-scene"
         vr-mode-ui="enabled: false;" 
@@ -123,24 +119,25 @@
                 position="0 0 0"
                 scale="0.2 0.2 0.2"> 
                 
+                <!-- 
+                    CAMBIO: Escala del modelo ajustada a "1 1 1" (ahora es 0.2 total)
+                -->
                 <a-gltf-model 
                     src="cow.glb" 
                     id="campus-model"
                     position="0 0 0" 
-                    scale=".2 .2 .2"
+                    scale="1 1 1"
                     rotation="-90 0 0"> 
                 </a-gltf-model>
 
-                <!-- Botón para mostrar/ocultar etiquetas -->
+                <!-- 
+                    CAMBIO: Escala del botón ajustada a "0.8 0.8 0.8"
+                -->
                 <a-entity 
                     id="toggle-button" 
-                    position="0 2.5 0" 
-                    scale="1.2 1.2 1.2"
+                    position="0 1.5 0" 
+                    scale="0.8 0.8 0.8"
                     rotation="0 0 0">
-                    <!-- 
-                        Cilindro rotado 90 grados en X para que quede plano.
-                        ID y Clase movidos aquí.
-                    -->
                     <a-cylinder 
                         id="toggle-button-geometry"
                         class="clickable"
@@ -150,10 +147,6 @@
                         opacity="0.9"
                         rotation="90 0 0">
                     </a-cylinder>
-                    <!-- 
-                        Texto posicionado sobre el cilindro (Y=0.11)
-                        y sin rotación.
-                    -->
                     <a-text
                         value="Ver Info"
                         align="center"
@@ -166,17 +159,20 @@
                     </a-text>
                 </a-entity>
 
-                <!-- Grupo "Tú estás aquí" -->
-                <a-entity position="0 0 0" class="label-group" visible="false">
+                <!-- 
+                    CAMBIO: Escala de la etiqueta ajustada a "1 1 1"
+                    CAMBIO: Ajustado el 'width' del plano y texto internos
+                -->
+                <a-entity position="0 0 0" class="label-group" visible="false" scale="1 1 1">
                     <a-sphere 
                         color="#FF0000" 
                         radius="0.25" 
                         position="0 0.2 0" 
                         rotation="0 0 0">
                     </a-sphere>
-                    <a-entity position="0 0.8 0" rotation="0 0 0" scale="5 5 5">
+                    <a-entity position="0 0.8 0" rotation="0 0 0">
                         <a-plane
-                            width="2"
+                            width="1.8"
                             height="0.5"
                             color="#FF0000"
                             position="0 0 -0.01">
@@ -185,7 +181,7 @@
                             value="Tú estás aquí" 
                             align="center" 
                             color="#FFFFFF"
-                            width="1.8"
+                            width="1.6"
                             font="roboto"
                             shader="msdf">
                         </a-text>
@@ -193,10 +189,13 @@
                 </a-entity>
 
 
-                <!-- Etiqueta "Biblioteca" -->
-                <a-entity position="2.5 1.5 -1.5" rotation="0 0 0" scale="2.5 2.5 2.5" class="label-group" visible="false">
+                <!-- 
+                    CAMBIO: Escala de la etiqueta ajustada a "1 1 1"
+                    CAMBIO: Ajustado el 'width' del plano y texto internos
+                -->
+                <a-entity position="1.5 1.0 -1.0" rotation="0 0 0" scale="1 1 1" class="label-group" visible="false">
                     <a-plane
-                        width="2.2"
+                        width="2.0"
                         height="0.5"
                         color="#000000"
                         opacity="0.7"
@@ -206,16 +205,19 @@
                         value="Biblioteca Central" 
                         align="center" 
                         color="#00AEEF"
-                        width="2"
+                        width="1.8"
                         font="roboto"
                         shader="msdf">
                     </a-text>
                 </a-entity>
                 
-                <!-- Etiqueta "Ingeniería" -->
-                <a-entity position="-2.5 1.5 1.5" rotation="0 0 0" scale="2.5 2.5 2.5" class="label-group" visible="false">
+                <!-- 
+                    CAMBIO: Escala de la etiqueta ajustada a "1 1 1"
+                    CAMBIO: Ajustado el 'width' del plano y texto internos
+                -->
+                <a-entity position="-1.5 1.0 1.0" rotation="0 0 0" scale="1 1 1" class="label-group" visible="false">
                     <a-plane
-                        width="2.7"
+                        width="2.5"
                         height="0.5"
                         color="#000000"
                         opacity="0.7"
@@ -225,7 +227,7 @@
                         value="Facultad de Ingeniería" 
                         align="center" 
                         color="#00AEEF"
-                        width="2.5"
+                        width="2.3"
                         font="roboto"
                         shader="msdf">
                     </a-text>
@@ -243,6 +245,9 @@
     </a-scene>
 </body>
 </html>
+
+
+
 
 
 
