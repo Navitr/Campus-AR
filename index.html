@@ -112,16 +112,16 @@
             type='pattern' 
             url='campus_qr.patt'> 
             
+            <!-- 
+                CAMBIO: Escala general reducida (de 0.2 a 0.1) para que el modelo no sea tan grande
+            -->
             <a-entity 
                 campus-ar-manager 
                 visible="false"
                 rotation="-90 0 0" 
                 position="0 0 0"
-                scale="0.2 0.2 0.2"> 
+                scale="0.1 0.1 0.1"> 
                 
-                <!-- 
-                    CAMBIO: Escala del modelo ajustada a "1 1 1" (ahora es 0.2 total)
-                -->
                 <a-gltf-model 
                     src="cow.glb" 
                     id="campus-model"
@@ -131,22 +131,22 @@
                 </a-gltf-model>
 
                 <!-- 
-                    CAMBIO: Escala del botón ajustada a "0.8 0.8 0.8"
+                    CAMBIO: Botón reemplazado por un <a-plane> (plano)
+                    para asegurar que el clic (raycaster) lo detecte fácilmente.
                 -->
                 <a-entity 
                     id="toggle-button" 
                     position="0 1.5 0" 
                     scale="0.8 0.8 0.8"
                     rotation="0 0 0">
-                    <a-cylinder 
+                    <a-plane 
                         id="toggle-button-geometry"
                         class="clickable"
-                        radius="0.5" 
-                        height="0.2" 
+                        width="1"
+                        height="0.4"
                         color="#0077FF"
-                        opacity="0.9"
-                        rotation="90 0 0">
-                    </a-cylinder>
+                        opacity="0.9">
+                    </a-plane>
                     <a-text
                         value="Ver Info"
                         align="center"
@@ -154,15 +154,12 @@
                         width="2"
                         font="roboto"
                         shader="msdf"
-                        position="0 0.11 0"
+                        position="0 0 0.01"
                         rotation="0 0 0">
                     </a-text>
                 </a-entity>
 
-                <!-- 
-                    CAMBIO: Escala de la etiqueta ajustada a "1 1 1"
-                    CAMBIO: Ajustado el 'width' del plano y texto internos
-                -->
+                <!-- Grupo "Tú estás aquí" -->
                 <a-entity position="0 0 0" class="label-group" visible="false" scale="1 1 1">
                     <a-sphere 
                         color="#FF0000" 
@@ -189,10 +186,7 @@
                 </a-entity>
 
 
-                <!-- 
-                    CAMBIO: Escala de la etiqueta ajustada a "1 1 1"
-                    CAMBIO: Ajustado el 'width' del plano y texto internos
-                -->
+                <!-- Etiqueta "Biblioteca" -->
                 <a-entity position="1.5 1.0 -1.0" rotation="0 0 0" scale="1 1 1" class="label-group" visible="false">
                     <a-plane
                         width="2.0"
@@ -211,10 +205,7 @@
                     </a-text>
                 </a-entity>
                 
-                <!-- 
-                    CAMBIO: Escala de la etiqueta ajustada a "1 1 1"
-                    CAMBIO: Ajustado el 'width' del plano y texto internos
-                -->
+                <!-- Etiqueta "Ingeniería" -->
                 <a-entity position="-1.5 1.0 1.0" rotation="0 0 0" scale="1 1 1" class="label-group" visible="false">
                     <a-plane
                         width="2.5"
@@ -245,10 +236,6 @@
     </a-scene>
 </body>
 </html>
-
-
-
-
 
 
 
