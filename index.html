@@ -27,10 +27,30 @@
             font-family: sans-serif;
             z-index: 1000;
         }
+
+        /* --- NUEVO: Estilos para el botón HTML --- */
+        #html-toggle-button {
+            display: none; /* Oculto por defecto */
+            position: fixed;
+            bottom: 80px; /* Sobre el message-box */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1001;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            background-color: #0077FF;
+            border: none;
+            border-radius: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
     </style>
 
     <script>
-        // --- CAMBIO: Lógica de clic eliminada de este componente ---
+        // --- CAMBIO: Se elimina el componente 'toggle-labels-button' ---
+
         AFRAME.registerComponent('campus-ar-manager', {
             init: function () {
                 const marker = document.querySelector('a-marker');
@@ -38,8 +58,11 @@
                 const labels = document.querySelectorAll('.label-group');
                 let labelsVisible = false; // Estado inicial: oculto
 
-                if (!marker) {
-                    console.error('El marcador AR no se encontró en la escena.');
+                // --- NUEVO: Referencia al botón HTML ---
+                const htmlButton = document.querySelector('#html-toggle-button');
+
+                if (!marker || !htmlButton) {
+                    console.error('El marcador AR o el botón HTML no se encontraron.');
                     return;
                 }
                 
@@ -48,12 +71,14 @@
                     console.log('Marcador Encontrado');
                     document.getElementById('status-message').textContent = '¡Mapa 3D Cargado! Toca el botón azul para ver la info.';
                     self.el.setAttribute('visible', true);
+                    htmlButton.style.display = 'block'; // Muestra el botón HTML
                 });
 
                 marker.addEventListener('markerLost', function() {
                     console.log('Marcador Perdido');
                     document.getElementById('status-message').textContent = 'Escanea el Código QR para ver el mapa 3D.';
                     self.el.setAttribute('visible', false);
+                    htmlButton.style.display = 'none'; // Oculta el botón HTML
                     
                     // Resetea la visibilidad de las etiquetas
                     labelsVisible = false;
@@ -61,19 +86,11 @@
                         label.setAttribute('visible', false);
                     });
                 });
-            }
-        });
 
-        // --- NUEVO MÉTODO: Componente de clic directo en el botón ---
-        AFRAME.registerComponent('toggle-labels-button', {
-            init: function () {
-                const labels = document.querySelectorAll('.label-group');
-                let labelsVisible = false;
-
-                // Escuchar el clic DIRECTAMENTE en este elemento (el plano)
-                this.el.addEventListener('click', function (evt) {
-                    console.log('Botón de plano presionado (listener directo)');
-                    evt.stopPropagation(); // Detener el evento aquí
+                // --- NUEVO: Listener de clic en el botón HTML ---
+                htmlButton.addEventListener('click', function(evt) {
+                    console.log('Botón HTML presionado');
+                    evt.stopPropagation(); // Detener el evento
 
                     // Alternar estado
                     labelsVisible = !labelsVisible; 
@@ -95,6 +112,9 @@
         Por favor, permite el acceso a la cámara y escanea el Código QR del campus.
     </div>
 
+    <!-- --- NUEVO: Botón HTML para alternar etiquetas --- -->
+    <button id="html-toggle-button">Ver Info</button>
+
     <a-scene 
         id="ar-scene"
         vr-mode-ui="enabled: false;" 
@@ -115,57 +135,24 @@
             type='pattern' 
             url='campus_qr.patt'> 
             
-            <!-- 
-                CAMBIO: Escala general reducida otra vez (de 0.1 a 0.05)
-            -->
             <a-entity 
                 campus-ar-manager 
                 visible="false"
                 rotation="-90 0 0" 
                 position="0 0 0"
-                scale="0.2 0.2 0.2"> 
+                scale=".5 .5 .5"> 
                 
                 <a-gltf-model 
                     src="cow.glb" 
                     id="campus-model"
                     position="0 0 0" 
-                    scale=".5 .5 .5"
+                    scale=".6 .6 .6"
                     rotation="-90 0 0"> 
                 </a-gltf-model>
 
                 <!-- 
-                    Botón de plano
+                    CAMBIO: Botón 3D (plano azul) ELIMINADO
                 -->
-                <a-entity 
-                    id="toggle-button" 
-                    position="0 1.5 0" 
-                    scale="0.8 0.8 0.8"
-                    rotation="0 0 0">
-                    
-                    <!-- 
-                        CAMBIO: Se añade el nuevo componente 'toggle-labels-button'
-                        directamente al plano.
-                    -->
-                    <a-plane 
-                        id="toggle-button-geometry"
-                        class="clickable"
-                        toggle-labels-button
-                        width="1"
-                        height="0.4"
-                        color="#0077FF"
-                        opacity="0.9">
-                    </a-plane>
-                    <a-text
-                        value="Ver Info"
-                        align="center"
-                        color="#FFFFFF"
-                        width="2"
-                        font="roboto"
-                        shader="msdf"
-                        position="0 0 0.01"
-                        rotation="0 0 0">
-                    </a-text>
-                </a-entity>
 
                 <!-- Grupo "Tú estás aquí" -->
                 <a-entity position="0 0 0" class="label-group" visible="false" scale="1 1 1">
@@ -236,13 +223,14 @@
         </a-marker>
         
         <!-- 
-            La cámara con el cursor y el raycaster.
-            Esto es correcto y necesario para el nuevo método.
+            CAMBIO: Se elimina 'cursor' y 'raycaster' de la cámara.
+            Ya no son necesarios.
         -->
-        <a-entity camera cursor="rayOrigin: mouse;" raycaster="objects: .clickable"></a-entity>
+        <a-entity camera></a-entity>
     </a-scene>
 </body>
 </html>
+
 
 
 
