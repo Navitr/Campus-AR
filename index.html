@@ -66,7 +66,8 @@
                 // --- LÓGICA DE CLIC MEJORADA: Escuchar clics en la escena ---
                 sceneEl.addEventListener('click', function (evt) {
                     // Verificamos si el clic intersectó con el botón
-                    const intersectedEl = evt.detail.intersectedEl;
+                    // (evt.detail.intersectedEl es el objeto que tocó el raycaster)
+                    const intersectedEl = evt.detail.intersectedEl; 
                     if (intersectedEl && intersectedEl.id === 'toggle-button-geometry') {
                         console.log('Botón de alternar presionado (detectado por la escena)');
                         
@@ -92,15 +93,13 @@
     </div>
 
     <!-- 
-        CAMBIO: Se añadió 'cursor="rayOrigin: mouse;"' y 'raycaster="objects: .clickable"'
-        para permitir "clics" en la pantalla.
+        CAMBIO: El 'cursor' y 'raycaster' se mueven a la entidad de la cámara.
+        Se quitan de la escena.
     -->
     <a-scene 
         id="ar-scene"
         vr-mode-ui="enabled: false;" 
         embedded 
-        cursor="rayOrigin: mouse;" 
-        raycaster="objects: .clickable"
         arjs='sourceType: webcam; 
               detectionMode: mono; 
               patternRatio: 0.9; 
@@ -117,9 +116,6 @@
             type='pattern' 
             url='campus_qr.patt'> 
             
-            <!-- 
-                CAMBIO: Escala general aumentada (de 0.1 a 0.2)
-            -->
             <a-entity 
                 campus-ar-manager 
                 visible="false"
@@ -128,25 +124,21 @@
                 scale="0.2 0.2 0.2"> 
                 
                 <a-gltf-model 
-                    src="cow.glb" 
+                    src="campus_mapa.glb" 
                     id="campus-model"
                     position="0 0 0" 
                     scale=".2 .2 .2"
                     rotation="-90 0 0"> 
                 </a-gltf-model>
 
-                <!-- 
-                    NUEVO: Botón para mostrar/ocultar etiquetas.
-                    CAMBIO: Rotación de la entidad padre a 0 0 0 (para que esté plana).
-                    CAMBIO: Escala del botón reducida (de 3 a 1.2)
-                -->
+                <!-- Botón para mostrar/ocultar etiquetas -->
                 <a-entity 
                     id="toggle-button" 
                     position="0 2.5 0" 
                     scale="1.2 1.2 1.2"
                     rotation="0 0 0">
                     <!-- 
-                        CAMBIO: Cilindro rotado 90 grados en X para que quede plano.
+                        Cilindro rotado 90 grados en X para que quede plano.
                         ID y Clase movidos aquí.
                     -->
                     <a-cylinder 
@@ -159,7 +151,7 @@
                         rotation="90 0 0">
                     </a-cylinder>
                     <!-- 
-                        CAMBIO: Texto posicionado sobre el cilindro (Y=0.11)
+                        Texto posicionado sobre el cilindro (Y=0.11)
                         y sin rotación.
                     -->
                     <a-text
@@ -174,9 +166,7 @@
                     </a-text>
                 </a-entity>
 
-                <!-- 
-                    CAMBIO: Se añade 'visible="false"' y 'class="label-group"'
-                -->
+                <!-- Grupo "Tú estás aquí" -->
                 <a-entity position="0 0 0" class="label-group" visible="false">
                     <a-sphere 
                         color="#FF0000" 
@@ -203,9 +193,7 @@
                 </a-entity>
 
 
-                <!-- 
-                    CAMBIO: Se añade 'visible="false"' y 'class="label-group"'
-                -->
+                <!-- Etiqueta "Biblioteca" -->
                 <a-entity position="2.5 1.5 -1.5" rotation="0 0 0" scale="2.5 2.5 2.5" class="label-group" visible="false">
                     <a-plane
                         width="2.2"
@@ -224,9 +212,7 @@
                     </a-text>
                 </a-entity>
                 
-                <!-- 
-                    CAMBIO: Se añade 'visible="false"' y 'class="label-group"'
-                -->
+                <!-- Etiqueta "Ingeniería" -->
                 <a-entity position="-2.5 1.5 1.5" rotation="0 0 0" scale="2.5 2.5 2.5" class="label-group" visible="false">
                     <a-plane
                         width="2.7"
@@ -249,14 +235,14 @@
         </a-marker>
         
         <!-- 
-            CAMBIO: Se reemplaza '<a-entity camera>' por '<a-camera-static>' 
-            para asegurar la compatibilidad con el cursor.
+            CAMBIO CRÍTICO:
+            Se elimina <a-camera-static> y se usa <a-entity camera>
+            para que AR.js y el cursor compartan la misma cámara.
         -->
-        <a-camera-static></a-camera-static>
+        <a-entity camera cursor="rayOrigin: mouse;" raycaster="objects: .clickable"></a-entity>
     </a-scene>
 </body>
 </html>
-
 
 
 
