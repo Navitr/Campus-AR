@@ -143,14 +143,21 @@
                     position="0 2.5 0" 
                     scale="3 3 3"
                     rotation="-90 0 0">
-                    <!-- El botón físico -->
+                    <!-- 
+                        CAMBIO: Añadido 'class="clickable"' al cilindro 
+                        para que el raycaster lo detecte.
+                    -->
                     <a-cylinder 
+                        class="clickable"
                         radius="0.5" 
                         height="0.2" 
                         color="#0077FF"
                         opacity="0.9">
                     </a-cylinder>
-                    <!-- Texto del botón -->
+                    <!-- 
+                        CAMBIO: Texto movido a Y negativa (-0.15) 
+                        y rotado 180 grados para que mire "hacia arriba".
+                    -->
                     <a-text
                         value="Ver Info"
                         align="center"
@@ -158,7 +165,8 @@
                         width="2"
                         font="roboto"
                         shader="msdf"
-                        position="0 0.15 0">
+                        position="0 -0.15 0"
+                        rotation="180 0 0">
                     </a-text>
                 </a-entity>
 
@@ -244,4 +252,8 @@
     </a-scene>
 </body>
 </html>
+
+
+</html>
+
 
