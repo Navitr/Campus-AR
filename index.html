@@ -35,6 +35,8 @@
             init: function () {
                 const marker = document.querySelector('a-marker');
                 const self = this;
+                let labelsVisible = false; // Estado inicial: oculto
+                let buttonListenerAttached = false; // Control para añadir el listener una sola vez
 
                 if (!marker) {
                     console.error('El marcador AR no se encontró en la escena.');
@@ -46,39 +48,45 @@
                     console.log('Marcador Encontrado');
                     document.getElementById('status-message').textContent = '¡Mapa 3D Cargado! Toca el botón azul para ver la info.';
                     self.el.setAttribute('visible', true);
+
+                    // --- NUEVA LÓGICA: Botón para alternar etiquetas ---
+                    // Se activa solo la primera vez que se encuentra el marcador
+                    if (!buttonListenerAttached) {
+                        const toggleButton = document.querySelector('#toggle-button-geometry'); // Apunta al cilindro
+                        const labels = document.querySelectorAll('.label-group');
+
+                        if (toggleButton) {
+                            toggleButton.addEventListener('click', function (evt) {
+                                // Detiene la propagación del evento para evitar clics accidentales
+                                evt.stopPropagation();
+                                console.log('Botón de alternar presionado');
+                                
+                                // Alterna el estado
+                                labelsVisible = !labelsVisible; 
+                                
+                                // Aplica el nuevo estado a todas las etiquetas
+                                labels.forEach(function(label) {
+                                    label.setAttribute('visible', labelsVisible);
+                                });
+                            });
+                            buttonListenerAttached = true; // Marca como añadido
+                        } else {
+                            console.error('No se encontró el botón #toggle-button-geometry');
+                        }
+                    }
                 });
 
                 marker.addEventListener('markerLost', function() {
                     console.log('Marcador Perdido');
                     document.getElementById('status-message').textContent = 'Escanea el Código QR para ver el mapa 3D.';
                     self.el.setAttribute('visible', false);
+                    
+                    // Resetea la visibilidad de las etiquetas
+                    labelsVisible = false;
+                    document.querySelectorAll('.label-group').forEach(function(label) {
+                        label.setAttribute('visible', false);
+                    });
                 });
-
-                // --- NUEVA LÓGICA: Botón para alternar etiquetas ---
-                // Esperamos un momento para que la entidad esté lista
-                setTimeout(() => {
-                    const toggleButton = document.querySelector('#toggle-button');
-                    const labels = document.querySelectorAll('.label-group');
-                    let labelsVisible = false; // Estado inicial: oculto
-
-                    if (toggleButton) {
-                        toggleButton.addEventListener('click', function (evt) {
-                            // Detiene la propagación del evento para evitar clics accidentales
-                            evt.stopPropagation();
-                            console.log('Botón de alternar presionado');
-                            
-                            // Alterna el estado
-                            labelsVisible = !labelsVisible; 
-                            
-                            // Aplica el nuevo estado a todas las etiquetas
-                            labels.forEach(function(label) {
-                                label.setAttribute('visible', labelsVisible);
-                            });
-                        });
-                    } else {
-                        console.error('No se encontró el botón #toggle-button');
-                    }
-                }, 500); // Pequeña espera para asegurar que todo esté cargado
             }
         });
     </script>
@@ -117,15 +125,18 @@
             type='pattern' 
             url='campus_qr.patt'> 
             
+            <!-- 
+                CAMBIO: Escala general aumentada (de 0.1 a 0.2)
+            -->
             <a-entity 
                 campus-ar-manager 
                 visible="false"
                 rotation="-90 0 0" 
                 position="0 0 0"
-                scale="0.1 0.1 0.1"> 
+                scale="0.2 0.2 0.2"> 
                 
                 <a-gltf-model 
-                    src="cow.glb" 
+                    src="campus_mapa.glb" 
                     id="campus-model"
                     position="0 0 0" 
                     scale=".2 .2 .2"
@@ -134,20 +145,20 @@
 
                 <!-- 
                     NUEVO: Botón para mostrar/ocultar etiquetas.
-                    Se le da la clase 'clickable' para que el raycaster lo detecte.
-                    CAMBIO: Añadida rotación de -90 en X para que quede plano.
+                    CAMBIO: Escala del botón reducida (de 3 a 1.2)
+                    CAMBIO: 'class="clickable"' quitado de esta entidad padre.
                 -->
                 <a-entity 
                     id="toggle-button" 
-                    class="clickable" 
                     position="0 2.5 0" 
-                    scale="3 3 3"
+                    scale="1.2 1.2 1.2"
                     rotation="-90 0 0">
                     <!-- 
-                        CAMBIO: Añadido 'class="clickable"' al cilindro 
+                        CAMBIO: Añadido 'id="toggle-button-geometry"' y 'class="clickable"'
                         para que el raycaster lo detecte.
                     -->
                     <a-cylinder 
+                        id="toggle-button-geometry"
                         class="clickable"
                         radius="0.5" 
                         height="0.2" 
@@ -243,17 +254,6 @@
 
             </a-entity>
         </a-marker>
-        
-        <!-- 
-            CAMBIO: Se reemplaza '<a-entity camera>' por '<a-camera-static>' 
-            para asegurar la compatibilidad con el cursor.
-        -->
-        <a-camera-static></a-camera-static>
-    </a-scene>
-</body>
-</html>
 
-
-</html>
 
 
