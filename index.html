@@ -30,12 +30,11 @@
     </style>
 
     <script>
-        // Componente A-Frame para manejar la visibilidad y escalado del modelo
+        // --- CAMBIO: Lógica de clic eliminada de este componente ---
         AFRAME.registerComponent('campus-ar-manager', {
             init: function () {
                 const marker = document.querySelector('a-marker');
                 const self = this;
-                const sceneEl = document.querySelector('a-scene');
                 const labels = document.querySelectorAll('.label-group');
                 let labelsVisible = false; // Estado inicial: oculto
 
@@ -62,23 +61,27 @@
                         label.setAttribute('visible', false);
                     });
                 });
+            }
+        });
 
-                // --- LÓGICA DE CLIC MEJORADA: Escuchar clics en la escena ---
-                sceneEl.addEventListener('click', function (evt) {
-                    // Verificamos si el clic intersectó con el botón
-                    // (evt.detail.intersectedEl es el objeto que tocó el raycaster)
-                    const intersectedEl = evt.detail.intersectedEl; 
-                    if (intersectedEl && intersectedEl.id === 'toggle-button-geometry') {
-                        console.log('Botón de alternar presionado (detectado por la escena)');
-                        
-                        // Alterna el estado
-                        labelsVisible = !labelsVisible; 
-                        
-                        // Aplica el nuevo estado a todas las etiquetas
-                        labels.forEach(function(label) {
-                            label.setAttribute('visible', labelsVisible);
-                        });
-                    }
+        // --- NUEVO MÉTODO: Componente de clic directo en el botón ---
+        AFRAME.registerComponent('toggle-labels-button', {
+            init: function () {
+                const labels = document.querySelectorAll('.label-group');
+                let labelsVisible = false;
+
+                // Escuchar el clic DIRECTAMENTE en este elemento (el plano)
+                this.el.addEventListener('click', function (evt) {
+                    console.log('Botón de plano presionado (listener directo)');
+                    evt.stopPropagation(); // Detener el evento aquí
+
+                    // Alternar estado
+                    labelsVisible = !labelsVisible; 
+
+                    // Aplicar a todas las etiquetas
+                    labels.forEach(function(label) {
+                        label.setAttribute('visible', labelsVisible);
+                    });
                 });
             }
         });
@@ -113,35 +116,40 @@
             url='campus_qr.patt'> 
             
             <!-- 
-                CAMBIO: Escala general reducida (de 0.2 a 0.1) para que el modelo no sea tan grande
+                CAMBIO: Escala general reducida otra vez (de 0.1 a 0.05)
             -->
             <a-entity 
                 campus-ar-manager 
                 visible="false"
                 rotation="-90 0 0" 
                 position="0 0 0"
-                scale="0.1 0.1 0.1"> 
+                scale="0.2 0.2 0.2"> 
                 
                 <a-gltf-model 
                     src="cow.glb" 
                     id="campus-model"
                     position="0 0 0" 
-                    scale="1 1 1"
+                    scale=".5 .5 .5"
                     rotation="-90 0 0"> 
                 </a-gltf-model>
 
                 <!-- 
-                    CAMBIO: Botón reemplazado por un <a-plane> (plano)
-                    para asegurar que el clic (raycaster) lo detecte fácilmente.
+                    Botón de plano
                 -->
                 <a-entity 
                     id="toggle-button" 
                     position="0 1.5 0" 
                     scale="0.8 0.8 0.8"
                     rotation="0 0 0">
+                    
+                    <!-- 
+                        CAMBIO: Se añade el nuevo componente 'toggle-labels-button'
+                        directamente al plano.
+                    -->
                     <a-plane 
                         id="toggle-button-geometry"
                         class="clickable"
+                        toggle-labels-button
                         width="1"
                         height="0.4"
                         color="#0077FF"
@@ -228,14 +236,15 @@
         </a-marker>
         
         <!-- 
-            CAMBIO CRÍTICO:
-            Se elimina <a-camera-static> y se usa <a-entity camera>
-            para que AR.js y el cursor compartan la misma cámara.
+            La cámara con el cursor y el raycaster.
+            Esto es correcto y necesario para el nuevo método.
         -->
         <a-entity camera cursor="rayOrigin: mouse;" raycaster="objects: .clickable"></a-entity>
     </a-scene>
 </body>
 </html>
+
+
 
 
 
