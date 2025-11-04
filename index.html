@@ -34,16 +34,17 @@
         AFRAME.registerComponent('campus-ar-manager', {
             init: function () {
                 const marker = document.querySelector('a-marker');
+                const self = this;
+
                 if (!marker) {
                     console.error('El marcador AR no se encontró en la escena.');
                     return;
                 }
                 
-                const self = this;
-                
+                // --- Lógica de visibilidad del marcador ---
                 marker.addEventListener('markerFound', function() {
                     console.log('Marcador Encontrado');
-                    document.getElementById('status-message').textContent = '¡Mapa 3D Cargado! Gira el marcador para explorarlo.';
+                    document.getElementById('status-message').textContent = '¡Mapa 3D Cargado! Toca el botón azul para ver la info.';
                     self.el.setAttribute('visible', true);
                 });
 
@@ -52,6 +53,29 @@
                     document.getElementById('status-message').textContent = 'Escanea el Código QR para ver el mapa 3D.';
                     self.el.setAttribute('visible', false);
                 });
+
+                // --- NUEVA LÓGICA: Botón para alternar etiquetas ---
+                const toggleButton = document.querySelector('#toggle-button');
+                const labels = document.querySelectorAll('.label-group');
+                let labelsVisible = false; // Estado inicial: oculto
+
+                if (toggleButton) {
+                    toggleButton.addEventListener('click', function (evt) {
+                        // Detiene la propagación del evento para evitar clics accidentales
+                        evt.stopPropagation();
+                        console.log('Botón de alternar presionado');
+                        
+                        // Alterna el estado
+                        labelsVisible = !labelsVisible; 
+                        
+                        // Aplica el nuevo estado a todas las etiquetas
+                        labels.forEach(function(label) {
+                            label.setAttribute('visible', labelsVisible);
+                        });
+                    });
+                } else {
+                    console.error('No se encontró el botón #toggle-button');
+                }
             }
         });
     </script>
@@ -64,10 +88,16 @@
         Por favor, permite el acceso a la cámara y escanea el Código QR del campus.
     </div>
 
+    <!-- 
+        CAMBIO: Se añadió 'cursor="rayOrigin: mouse;"' y 'raycaster="objects: .clickable"'
+        para permitir "clics" en la pantalla.
+    -->
     <a-scene 
         id="ar-scene"
         vr-mode-ui="enabled: false;" 
         embedded 
+        cursor="rayOrigin: mouse;" 
+        raycaster="objects: .clickable"
         arjs='sourceType: webcam; 
               detectionMode: mono; 
               patternRatio: 0.9; 
@@ -89,44 +119,63 @@
                 visible="false"
                 rotation="-90 0 0" 
                 position="0 0 0"
-                scale="0.2 0.2 0.2"> 
+                scale="0.1 0.1 0.1"> 
                 
-                <!-- 
-                    CAMBIO: Modelo 3D rotado -90 grados en X para vista cenital.
-                    Asumo que tu modelo se llama 'campus_mapa.glb'.
-                -->
                 <a-gltf-model 
                     src="cow.glb" 
                     id="campus-model"
                     position="0 0 0" 
                     scale=".2 .2 .2"
-                    rotation="90 0 0"> 
+                    rotation="-90 0 0"> 
                 </a-gltf-model>
 
                 <!-- 
-                    CAMBIO: Grupo "Tú estás aquí" en el centro (0 0 0).
-                    La esfera está en Y=0.2 (suelo) y el texto en Y=0.8 (flotando).
+                    NUEVO: Botón para mostrar/ocultar etiquetas.
+                    Se le da la clase 'clickable' para que el raycaster lo detecte.
                 -->
-                <a-entity position="0 0 0">
-                    <!-- Esfera en el "suelo" -->
+                <a-entity 
+                    id="toggle-button" 
+                    class="clickable" 
+                    position="0 2.5 0" 
+                    scale="3 3 3">
+                    <!-- El botón físico -->
+                    <a-cylinder 
+                        radius="0.5" 
+                        height="0.2" 
+                        color="#0077FF"
+                        opacity="0.9">
+                    </a-cylinder>
+                    <!-- Texto del botón -->
+                    <a-text
+                        value="Ver Info"
+                        align="center"
+                        color="#FFFFFF"
+                        width="2"
+                        font="roboto"
+                        shader="msdf"
+                        position="0 0.15 0">
+                    </a-text>
+                </a-entity>
+
+                <!-- 
+                    CAMBIO: Se añade 'visible="false"' y 'class="label-group"'
+                -->
+                <a-entity position="0 0 0" class="label-group" visible="false">
                     <a-sphere 
                         color="#FF0000" 
                         radius="0.25" 
                         position="0 0.2 0" 
                         rotation="0 0 0">
                     </a-sphere>
-                    <!-- Texto flotando sobre la esfera -->
-                    <a-entity position="0 0.8 0" rotation="0 0 0" scale="3 3 5">
-                        <!-- CAMBIO: Plano de fondo añadido -->
+                    <a-entity position="0 0.8 0" rotation="0 0 0" scale="5 5 5">
                         <a-plane
-                            width=".6"
-                            height="0.2"
+                            width="2"
+                            height="0.5"
                             color="#FF0000"
                             position="0 0 -0.01">
                         </a-plane>
-                        <!-- CAMBIO: Fuente cambiada a 'roboto' y color a blanco -->
                         <a-text 
-                            value="Tu estas aqui" 
+                            value="Tú estás aquí" 
                             align="center" 
                             color="#FFFFFF"
                             width="1.8"
@@ -137,9 +186,10 @@
                 </a-entity>
 
 
-                <!-- Etiqueta "Biblioteca" -->
-                <a-entity position="5 1.5 -1.5" rotation="0 0 -90" scale="2.5 2.5 2.5">
-                    <!-- CAMBIO: Plano de fondo añadido -->
+                <!-- 
+                    CAMBIO: Se añade 'visible="false"' y 'class="label-group"'
+                -->
+                <a-entity position="2.5 1.5 -1.5" rotation="0 0 0" scale="2.5 2.5 2.5" class="label-group" visible="false">
                     <a-plane
                         width="2.2"
                         height="0.5"
@@ -147,7 +197,6 @@
                         opacity="0.7"
                         position="0 0 -0.01">
                     </a-plane>
-                    <!-- CAMBIO: Fuente cambiada a 'roboto' (incluida) y 'shader: msdf' para nitidez -->
                     <a-text 
                         value="Biblioteca Central" 
                         align="center" 
@@ -159,11 +208,9 @@
                 </a-entity>
                 
                 <!-- 
-                    CAMBIO: Etiqueta "Ingeniería" movida a una esquina opuesta
-                    para mejor distribución.
+                    CAMBIO: Se añade 'visible="false"' y 'class="label-group"'
                 -->
-                <a-entity position="-5 1.5 1.5" rotation="0 0 90" scale="2.5 2.5 2.5">
-                    <!-- CAMBIO: Plano de fondo añadido -->
+                <a-entity position="-2.5 1.5 1.5" rotation="0 0 0" scale="2.5 2.5 2.5" class="label-group" visible="false">
                     <a-plane
                         width="2.7"
                         height="0.5"
@@ -171,7 +218,6 @@
                         opacity="0.7"
                         position="0 0 -0.01">
                     </a-plane>
-                    <!-- CAMBIO: Fuente cambiada a 'roboto' (incluida) y 'shader: msdf' para nitidez -->
                     <a-text 
                         value="Facultad de Ingeniería" 
                         align="center" 
@@ -185,9 +231,13 @@
             </a-entity>
         </a-marker>
         
-        <!-- Cámara por defecto de AR.js -->
-        <a-entity camera></a-entity>
+        <!-- 
+            CAMBIO: Se reemplaza '<a-entity camera>' por '<a-camera-static>' 
+            para asegurar la compatibilidad con el cursor.
+        -->
+        <a-camera-static></a-camera-static>
     </a-scene>
 </body>
 </html>
+
 
