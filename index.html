@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <title>Mapa AR del Campus</title>
+    
+    <!-- 1. Incluye A-Frame (versión estable) -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    
+    <!-- 2. Incluye AR.js desde un CDN para evitar conflictos de componentes -->
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@master/aframe/build/aframe-ar.js"></script>
+
+    <style>
+        /* Oculta el cursor de A-Frame por defecto */
+        #cursor { display: none; }
+        
+        /* Estilos básicos para mensajes */
+        .message-box {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-family: sans-serif;
+            z-index: 1000;
+        }
+    </style>
+
+    <script>
+        // Componente A-Frame para manejar la visibilidad y escalado del modelo
+        AFRAME.registerComponent('campus-ar-manager', {
+            init: function () {
+                const marker = document.querySelector('a-marker');
+                if (!marker) {
+                    console.error('El marcador AR no se encontró en la escena.');
+                    return;
+                }
+                
+                const self = this;
+                
+                marker.addEventListener('markerFound', function() {
+                    console.log('Marcador Encontrado');
+                    document.getElementById('status-message').textContent = '¡Mapa 3D Cargado! Gira el marcador para explorarlo.';
+                    self.el.setAttribute('visible', true);
+                });
+
+                marker.addEventListener('markerLost', function() {
+                    console.log('Marcador Perdido');
+                    document.getElementById('status-message').textContent = 'Escanea el Código QR para ver el mapa 3D.';
+                    self.el.setAttribute('visible', false);
+                });
+            }
+        });
+    </script>
+</head>
+
+<body style="margin: 0px; overflow: hidden;">
+
+    <!-- Mensaje de estado para el usuario -->
+    <div id="status-message" class="message-box">
+        Por favor, permite el acceso a la cámara y escanea el Código QR del campus.
+    </div>
+
+    <a-scene 
+        id="ar-scene"
+        vr-mode-ui="enabled: false;" 
+        embedded 
+        arjs='sourceType: webcam; 
+              detectionMode: mono; 
+              patternRatio: 0.9; 
+              maxDetectionRate: 60; 
+              cameraParametersUrl: camera_para.dat;' 
+        loading-screen="enabled: false;">
+
+        <!-- Luces para asegurar que el modelo GLB se vea correctamente -->
+        <a-light type="ambient" color="#CCC"></a-light>
+        <a-light type="directional" position="1 2 4" color="#FFF"></a-light>
+
+        <!-- Anclaje AR usando tu patrón QR -->
+        <a-marker 
+            type='pattern' 
+            url='campus_qr.patt'> 
+            
+            <a-entity 
+                campus-ar-manager 
+                visible="false"
+                rotation="-90 0 0" 
+                position="0 0 0"
+                scale="0.2 0.2 0.2"> 
+                
+                <!-- 
+                    CAMBIO: Modelo 3D rotado -90 grados en X para vista cenital.
+                    Asumo que tu modelo se llama 'campus_mapa.glb'.
+                -->
+                <a-gltf-model 
+                    src="cow.glb" 
+                    id="campus-model"
+                    position="0 0 0" 
+                    scale=".2 .2 .2"
+                    rotation="90 0 0"> 
+                </a-gltf-model>
+
+                <!-- 
+                    CAMBIO: Grupo "Tú estás aquí" en el centro (0 0 0).
+                    La esfera está en Y=0.2 (suelo) y el texto en Y=0.8 (flotando).
+                -->
+                <a-entity position="0 0 0">
+                    <!-- Esfera en el "suelo" -->
+                    <a-sphere 
+                        color="#FF0000" 
+                        radius="0.25" 
+                        position="0 0.2 0" 
+                        rotation="0 0 0">
+                    </a-sphere>
+                    <!-- Texto flotando sobre la esfera -->
+                    <a-entity position="0 0.8 0" rotation="0 0 0" scale="3 3 5">
+                        <!-- CAMBIO: Plano de fondo añadido -->
+                        <a-plane
+                            width=".6"
+                            height="0.2"
+                            color="#FF0000"
+                            position="0 0 -0.01">
+                        </a-plane>
+                        <!-- CAMBIO: Fuente cambiada a 'roboto' y color a blanco -->
+                        <a-text 
+                            value="Tu estas aqui" 
+                            align="center" 
+                            color="#FFFFFF"
+                            width="1.8"
+                            font="roboto"
+                            shader="msdf">
+                        </a-text>
+                    </a-entity>
+                </a-entity>
+
+
+                <!-- Etiqueta "Biblioteca" -->
+                <a-entity position="5 1.5 -1.5" rotation="0 0 -90" scale="2.5 2.5 2.5">
+                    <!-- CAMBIO: Plano de fondo añadido -->
+                    <a-plane
+                        width="2.2"
+                        height="0.5"
+                        color="#000000"
+                        opacity="0.7"
+                        position="0 0 -0.01">
+                    </a-plane>
+                    <!-- CAMBIO: Fuente cambiada a 'roboto' (incluida) y 'shader: msdf' para nitidez -->
+                    <a-text 
+                        value="Biblioteca Central" 
+                        align="center" 
+                        color="#00AEEF"
+                        width="2"
+                        font="roboto"
+                        shader="msdf">
+                    </a-text>
+                </a-entity>
+                
+                <!-- 
+                    CAMBIO: Etiqueta "Ingeniería" movida a una esquina opuesta
+                    para mejor distribución.
+                -->
+                <a-entity position="-5 1.5 1.5" rotation="0 0 90" scale="2.5 2.5 2.5">
+                    <!-- CAMBIO: Plano de fondo añadido -->
+                    <a-plane
+                        width="2.7"
+                        height="0.5"
+                        color="#000000"
+                        opacity="0.7"
+                        position="0 0 -0.01">
+                    </a-plane>
+                    <!-- CAMBIO: Fuente cambiada a 'roboto' (incluida) y 'shader: msdf' para nitidez -->
+                    <a-text 
+                        value="Facultad de Ingeniería" 
+                        align="center" 
+                        color="#00AEEF"
+                        width="2.5"
+                        font="roboto"
+                        shader="msdf">
+                    </a-text>
+                </a-entity>
+
+            </a-entity>
+        </a-marker>
+        
+        <!-- Cámara por defecto de AR.js -->
+        <a-entity camera></a-entity>
+    </a-scene>
+</body>
+</html>
+
