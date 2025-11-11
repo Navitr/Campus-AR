@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <title>Mapa AR del Campus</title>
     
-    <!-- 1. Incluye A-Frame (versión estable) -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     
-    <!-- 2. Incluye AR.js desde un CDN para evitar conflictos de componentes -->
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@master/aframe/build/aframe-ar.js"></script>
 
     <style>
@@ -28,50 +26,66 @@
             z-index: 1000;
         }
 
-        /* --- NUEVO: Estilos para el botón HTML --- */
-        #html-toggle-button {
+        /* --- ESTILOS PARA LOS BOTONES HTML --- */
+        .ar-button {
             display: none; /* Oculto por defecto */
             position: fixed;
             bottom: 80px; /* Sobre el message-box */
-            left: 50%;
-            transform: translateX(-50%);
             z-index: 1001;
-            padding: 12px 24px;
+            padding: 12px 20px;
             font-size: 16px;
             font-weight: bold;
             color: white;
-            background-color: #0077FF;
             border: none;
             border-radius: 30px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             cursor: pointer;
         }
+
+        #html-toggle-button {
+            left: 20px; /* Botón de visibilidad a la izquierda */
+            background-color: #0077FF; /* Azul */
+        }
+        
+        #html-color-button {
+            right: 20px; /* Botón de color a la derecha */
+            background-color: #4CAF50; /* Verde */
+        }
     </style>
 
     <script>
-        // --- CAMBIO: Se elimina el componente 'toggle-labels-button' ---
-
         AFRAME.registerComponent('campus-ar-manager', {
             init: function () {
                 const marker = document.querySelector('a-marker');
                 const self = this;
+                
+                // --- Referencias a elementos ---
                 const labels = document.querySelectorAll('.label-group');
-                let labelsVisible = false; // Estado inicial: oculto
-
-                // --- NUEVO: Referencia al botón HTML ---
                 const htmlButton = document.querySelector('#html-toggle-button');
+                const colorButton = document.querySelector('#html-color-button'); // NUEVO
+                
+                // --- NUEVO: Referencias a elementos de etiquetas por clase ---
+                const standardBgs = document.querySelectorAll('.label-bg');
+                const standardTexts = document.querySelectorAll('.label-text');
+                const specialBg = document.querySelector('.label-bg-special');
+                const specialText = document.querySelector('.label-text-special');
 
-                if (!marker || !htmlButton) {
-                    console.error('El marcador AR o el botón HTML no se encontraron.');
+                // --- Variables de estado ---
+                let labelsVisible = false; // Estado inicial: oculto
+                let highContrast = false; // NUEVO: Estado de contraste
+
+                if (!marker || !htmlButton || !colorButton || !specialBg || !specialText) {
+                    console.error('Faltan elementos clave: marcador, botones, o etiquetas especiales.');
                     return;
                 }
                 
                 // --- Lógica de visibilidad del marcador ---
                 marker.addEventListener('markerFound', function() {
                     console.log('Marcador Encontrado');
-                    document.getElementById('status-message').textContent = '¡Mapa 3D Cargado! Toca el botón azul para ver la info.';
+                    document.getElementById('status-message').textContent = '¡Mapa 3D Cargado! Toca los botones para interactuar.';
                     self.el.setAttribute('visible', true);
                     htmlButton.style.display = 'block'; // Muestra el botón HTML
+                    colorButton.style.display = 'block'; // NUEVO: Muestra el botón de color
                 });
 
                 marker.addEventListener('markerLost', function() {
@@ -79,40 +93,62 @@
                     document.getElementById('status-message').textContent = 'Escanea el Código QR para ver el mapa 3D.';
                     self.el.setAttribute('visible', false);
                     htmlButton.style.display = 'none'; // Oculta el botón HTML
+                    colorButton.style.display = 'none'; // NUEVO: Oculta el botón de color
                     
                     // Resetea la visibilidad de las etiquetas
                     labelsVisible = false;
                     labels.forEach(function(label) {
                         label.setAttribute('visible', false);
                     });
-                    
-                    // --- CAMBIO: Resetear el texto del botón ---
                     htmlButton.textContent = 'Ver Info';
+                    
+                    // --- NUEVO: Resetear colores si estaban cambiados ---
+                    if (highContrast) {
+                        highContrast = false; // Resetea el estado
+                        colorButton.textContent = 'Contraste';
+                        // Volver a original
+                        standardBgs.forEach(bg => bg.setAttribute('material', 'color', '#000000'));
+                        standardTexts.forEach(txt => txt.setAttribute('text', 'color', '#00AEEF'));
+                        specialBg.setAttribute('material', 'color', '#FF0000');
+                        specialText.setAttribute('text', 'color', '#FFFFFF');
+                    }
                 });
 
-                // --- NUEVO: Listener de clic en el botón HTML ---
+                // --- Listener de clic en el botón de VISIBILIDAD ---
                 htmlButton.addEventListener('click', function(evt) {
-                    console.log('Botón HTML presionado');
-                    evt.stopPropagation(); // Detener el evento
+                    console.log('Botón Visibilidad presionado');
+                    evt.stopPropagation();
+                    labelsVisible = !labelsVisible; // Alternar estado
 
-                    // Alternar estado
-                    labelsVisible = !labelsVisible; 
-
-                    // --- CAMBIO: Lógica para cambiar texto del botón ---
                     if (labelsVisible) {
-                        // Aplicar a todas las etiquetas
-                        labels.forEach(function(label) {
-                            label.setAttribute('visible', true);
-                        });
-                        // Cambiar texto del botón
+                        labels.forEach(label => label.setAttribute('visible', true));
                         htmlButton.textContent = 'Ocultar Info';
                     } else {
-                        // Aplicar a todas las etiquetas
-                        labels.forEach(function(label) {
-                            label.setAttribute('visible', false);
-                        });
-                        // Cambiar texto del botón
+                        labels.forEach(label => label.setAttribute('visible', false));
                         htmlButton.textContent = 'Ver Info';
+                    }
+                });
+                
+                // --- NUEVO: Listener de clic en el botón de COLOR ---
+                colorButton.addEventListener('click', function(evt) {
+                    console.log('Botón Color presionado');
+                    evt.stopPropagation();
+                    highContrast = !highContrast; // Alternar estado de contraste
+
+                    if (highContrast) {
+                        // Aplicar alto contraste (Fondo Blanco, Texto Oscuro)
+                        colorButton.textContent = 'Original';
+                        standardBgs.forEach(bg => bg.setAttribute('material', 'color', '#FFFFFF'));
+                        standardTexts.forEach(txt => txt.setAttribute('text', 'color', '#000000'));
+                        specialBg.setAttribute('material', 'color', '#FFFFFF');
+                        specialText.setAttribute('text', 'color', '#FF0000'); // Texto rojo sobre blanco
+                    } else {
+                        // Volver a original (Fondo Oscuro/Rojo, Texto Claro)
+                        colorButton.textContent = 'Contraste';
+                        standardBgs.forEach(bg => bg.setAttribute('material', 'color', '#000000'));
+                        standardTexts.forEach(txt => txt.setAttribute('text', 'color', '#00AEEF'));
+                        specialBg.setAttribute('material', 'color', '#FF0000');
+                        specialText.setAttribute('text', 'color', '#FFFFFF');
                     }
                 });
             }
@@ -122,15 +158,12 @@
 
 <body style="margin: 0px; overflow: hidden;">
 
-    <!-- Mensaje de estado para el usuario -->
     <div id="status-message" class="message-box">
         Por favor, permite el acceso a la cámara y escanea el Código QR del campus.
     </div>
 
-    <!-- --- NUEVO: Botón HTML para alternar etiquetas --- -->
-    <button id="html-toggle-button">Ver Info</button>
-
-    <a-scene 
+    <button id="html-toggle-button" class="ar-button">Ver Info</button>
+    <button id="html-color-button" class="ar-button">Contraste</button> <a-scene 
         id="ar-scene"
         vr-mode-ui="enabled: false;" 
         embedded 
@@ -141,11 +174,9 @@
               cameraParametersUrl: camera_para.dat;' 
         loading-screen="enabled: false;">
 
-        <!-- Luces para asegurar que el modelo GLB se vea correctamente -->
         <a-light type="ambient" color="#CCC"></a-light>
         <a-light type="directional" position="1 2 4" color="#FFF"></a-light>
 
-        <!-- Anclaje AR usando tu patrón QR -->
         <a-marker 
             type='pattern' 
             url='campus_qr.patt'> 
@@ -165,11 +196,6 @@
                     rotation="90 0 0"> 
                 </a-gltf-model>
 
-                <!-- 
-                    CAMBIO: Botón 3D (plano azul) ELIMINADO
-                -->
-
-                <!-- Grupo "Tú estás aquí" -->        <!-- Primer número izquierda derecha, segundo numero arriba abajo, tercer numero atras adelante -->
                 <a-entity position="0.7 .65 .5" class="label-group" visible="false" scale="1 1 1">
                     <a-sphere 
                         color="#FF0000" 
@@ -179,13 +205,13 @@
                     </a-sphere>
                     <a-entity position="0.35 0.15 0" rotation="0 0 0">
                         <a-plane
-                            width=".6"
+                            class="label-bg-special" width=".6"
                             height="0.2"
                             color="#FF0000"
                             position="0 0 -0.01">
                         </a-plane>
                         <a-text 
-                            value="Tu estas aqui" 
+                            class="label-text-special" value="Tu estas aqui" 
                             align="center" 
                             color="#FFFFFF"
                             width="1.6"
@@ -196,17 +222,16 @@
                 </a-entity>
 
 
-                <!-- Etiqueta "EMA" -->
                 <a-entity position=".45 -.1 0.5" rotation="0 0 0" scale="1 1 1" class="label-group" visible="false">
                     <a-plane
-                        width="0.8"
+                        class="label-bg" width="0.8"
                         height="0.3"
                         color="#000000"
                         opacity="0.9"
                         position="0 0 -0.01">
                     </a-plane>
                     <a-text 
-                        value="EMA" 
+                        class="label-text" value="EMA" 
                         align="center" 
                         color="#00AEEF"
                         width="1.8"
@@ -215,17 +240,16 @@
                     </a-text>
                 </a-entity>
                 
-                <!-- Etiqueta "ARPA 3" -->
                 <a-entity position="-0.035 -0.55 0.5" rotation="0 0 0" scale="1 1 1" class="label-group" visible="false">
                     <a-plane
-                        width="0.8"
+                        class="label-bg" width="0.8"
                         height="0.3"
                         color="#000000"
                         opacity="0.9"
                         position="0 0 -0.01">
                     </a-plane>
                     <a-text 
-                        value="ARPA 3" 
+                        class="label-text" value="ARPA 3" 
                         align="center" 
                         color="#00AEEF"
                         width="1.8"
@@ -234,17 +258,16 @@
                     </a-text>
                 </a-entity>
                 
-                <!-- Etiqueta "Danza" -->
                 <a-entity position="-0.6 -0.1 0.5" rotation="0 0 0" scale="1 1 1" class="label-group" visible="false">
                     <a-plane
-                        width="0.8"
+                        class="label-bg" width="0.8"
                         height="0.3"
                         color="#000000"
                         opacity="0.9"
                         position="0 0 -0.01">
                     </a-plane>
                     <a-text 
-                        value="Danza" 
+                        class="label-text" value="Danza" 
                         align="center" 
                         color="#00AEEF"
                         width="1.8"
@@ -253,17 +276,16 @@
                     </a-text>
                 </a-entity>
 
-                <!-- Etiqueta "Musica" -->
                 <a-entity position="0.25 1.1 0.5" rotation="0 0 0" scale="1 1 1" class="label-group" visible="false">
                     <a-plane
-                        width="0.8"
+                        class="label-bg" width="0.8"
                         height="0.3"
                         color="#000000"
                         opacity="0.9"
                         position="0 0 -0.01">
                     </a-plane>
                     <a-text 
-                        value="Musica" 
+                        class="label-text" value="Musica" 
                         align="center" 
                         color="#00AEEF"
                         width="1.8"
@@ -276,20 +298,10 @@
             </a-entity>
         </a-marker>
         
-        <!-- 
-            CAMBIO: Se elimina 'cursor' y 'raycaster' de la cámara.
-            Ya no son necesarios.
-        -->
         <a-entity camera></a-entity>
     </a-scene>
 </body>
 </html>
-
-
-
-
-
-
 
 
 
