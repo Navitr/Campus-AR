@@ -3,35 +3,107 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-    <title>Mapa AR del Campus</title>
+    <title>Mapa AR del Campus Interactivo</title>
     
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@master/aframe/build/aframe-ar.js"></script>
 
     <style>
-        /* Oculta el cursor de A-Frame por defecto */
-        #cursor { display: none; }
+        /* --- ESTILOS GENERALES UI --- */
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Roboto, sans-serif; }
         
-        /* Estilos básicos para mensajes */
-        .message-box {
+        /* Contenedor principal que cubre la pantalla pero deja pasar los clics al 3D */
+        .ui-container {
             position: fixed;
-            bottom: 0;
-            width: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; 
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Permitir clics en los elementos hijos del contenedor */
+        .ui-container > * { pointer-events: auto; }
+
+        /* Mensaje de estado (Arriba) */
+        .message-box {
             background: rgba(0, 0, 0, 0.7);
             color: white;
             padding: 10px;
             text-align: center;
-            font-family: sans-serif;
-            z-index: 1000;
+            width: 100%;
         }
 
-        /* --- ESTILOS PARA LOS BOTONES HTML --- */
+        /* --- MENÚ LATERAL (DERECHA) --- */
+        .building-menu {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none; /* Se oculta si no hay marcador */
+            flex-direction: column;
+            gap: 10px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .building-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            cursor: pointer;
+            text-align: right;
+            transition: all 0.2s;
+        }
+
+        .building-btn:active, .building-btn.active {
+            background: #0077FF;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* --- TARJETA DE INFORMACIÓN (POPUP) --- */
+        .info-card {
+            display: none;
+            position: absolute;
+            top: 60px; /* Debajo del mensaje */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 85%;
+            max-width: 400px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; top: 40px; }
+            to { opacity: 1; top: 60px; }
+        }
+
+        .info-card h2 { margin: 0 0 5px 0; color: #0077FF; font-size: 18px; }
+        .info-card p { margin: 0; color: #555; font-size: 14px; line-height: 1.4; }
+        .close-card {
+            position: absolute; top: 5px; right: 10px;
+            font-size: 20px; color: #999; cursor: pointer;
+        }
+
+        /* --- BOTONES INFERIORES (CONTROL) --- */
+        .bottom-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
         .ar-button {
-            display: none; /* Oculto por defecto */
-            position: fixed;
-            bottom: 80px; /* Sobre el message-box */
-            z-index: 1001;
             padding: 12px 20px;
             font-size: 16px;
             font-weight: bold;
@@ -41,259 +113,217 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             cursor: pointer;
         }
-
-        #html-toggle-button {
-            left: 20px; /* Botón de visibilidad a la izquierda */
-            background-color: #0077FF; /* Azul */
-        }
-        
-        #html-color-button {
-            right: 20px; /* Botón de color a la derecha */
-            background-color: #4CAF50; /* Verde */
-        }
+        #html-toggle-button { background-color: #0077FF; }
+        #html-color-button { background-color: #4CAF50; }
     </style>
 
     <script>
+        // --- 1. CONFIGURACIÓN DE EDIFICIOS ---
+        // Ajusta las coordenadas 'position' para que la flecha caiga sobre tus edificios
+        const buildingsData = {
+            "ema": {
+                title: "Edificio EMA",
+                desc: "Escuela de Modelado y Arte. Laboratorios de 3D.",
+                position: "0.45 -0.1 0.6" 
+            },
+            "arpa": {
+                title: "ARPA 3",
+                desc: "Aulas teóricas y oficinas administrativas.",
+                position: "-0.035 -0.55 0.6"
+            },
+            "danza": {
+                title: "Facultad de Danza",
+                desc: "Salones con duela para práctica escénica.",
+                position: "-0.6 -0.1 0.6"
+            },
+            "musica": {
+                title: "Conservatorio",
+                desc: "Salas acústicas y cubículos de ensayo.",
+                position: "0.25 1.1 0.6"
+            }
+        };
+
         AFRAME.registerComponent('campus-ar-manager', {
             init: function () {
-                const marker = document.querySelector('a-marker');
                 const self = this;
+                const marker = document.querySelector('a-marker');
                 
-                // --- Referencias a elementos ---
-                const labels = document.querySelectorAll('.label-group');
+                // Elementos UI
+                const infoCard = document.getElementById('info-card');
+                const cardTitle = document.getElementById('card-title');
+                const cardDesc = document.getElementById('card-desc');
+                const closeCard = document.querySelector('.close-card');
+                const menu = document.querySelector('.building-menu');
+                
+                // Elementos 3D
+                const pointer = document.getElementById('3d-pointer');
+                
+                // Botones de control
                 const htmlButton = document.querySelector('#html-toggle-button');
-                const colorButton = document.querySelector('#html-color-button'); // NUEVO
+                const colorButton = document.querySelector('#html-color-button');
                 
-                // --- NUEVO: Referencias a elementos de etiquetas por clase ---
-                const standardBgs = document.querySelectorAll('.label-bg');
-                const standardTexts = document.querySelectorAll('.label-text');
-                const specialBg = document.querySelector('.label-bg-special');
-                const specialText = document.querySelector('.label-text-special');
+                // Grupos de etiquetas
+                const labels = document.querySelectorAll('.label-group');
+                let labelsVisible = false;
+                let highContrast = false;
 
-                // --- Variables de estado ---
-                let labelsVisible = false; // Estado inicial: oculto
-                let highContrast = false; // NUEVO: Estado de contraste
+                // --- FUNCIÓN: SELECCIONAR EDIFICIO ---
+                // Se hace global (window) para que funcione el onclick del HTML
+                window.selectBuilding = function(key) {
+                    const data = buildingsData[key];
+                    if (!data) return;
 
-                if (!marker || !htmlButton || !colorButton || !specialBg || !specialText) {
-                    console.error('Faltan elementos clave: marcador, botones, o etiquetas especiales.');
-                    return;
-                }
-                
-                // --- Lógica de visibilidad del marcador ---
+                    // 1. Llenar y mostrar tarjeta
+                    cardTitle.textContent = data.title;
+                    cardDesc.textContent = data.desc;
+                    infoCard.style.display = 'block';
+
+                    // 2. Mover y mostrar puntero 3D
+                    pointer.setAttribute('visible', true);
+                    pointer.setAttribute('position', data.position);
+
+                    // 3. Estilo visual en el botón presionado
+                    document.querySelectorAll('.building-btn').forEach(b => b.classList.remove('active'));
+                    document.getElementById('btn-' + key).classList.add('active');
+                };
+
+                // Cerrar tarjeta
+                closeCard.addEventListener('click', () => {
+                    infoCard.style.display = 'none';
+                    pointer.setAttribute('visible', false);
+                    document.querySelectorAll('.building-btn').forEach(b => b.classList.remove('active'));
+                });
+
+                // --- LÓGICA DEL MARCADOR ---
                 marker.addEventListener('markerFound', function() {
                     console.log('Marcador Encontrado');
-                    document.getElementById('status-message').textContent = '¡Mapa 3D Cargado! Toca los botones para interactuar.';
+                    document.getElementById('status-message').textContent = '¡Mapa detectado! Selecciona un edificio.';
                     self.el.setAttribute('visible', true);
-                    htmlButton.style.display = 'block'; // Muestra el botón HTML
-                    colorButton.style.display = 'block'; // NUEVO: Muestra el botón de color
+                    menu.style.display = 'flex'; // Mostrar menú lateral
                 });
 
                 marker.addEventListener('markerLost', function() {
                     console.log('Marcador Perdido');
-                    document.getElementById('status-message').textContent = 'Escanea el Código QR para ver el mapa 3D.';
+                    document.getElementById('status-message').textContent = 'Escanea el Código QR.';
                     self.el.setAttribute('visible', false);
-                    htmlButton.style.display = 'none'; // Oculta el botón HTML
-                    colorButton.style.display = 'none'; // NUEVO: Oculta el botón de color
                     
-                    // Resetea la visibilidad de las etiquetas
+                    // Ocultar UI
+                    menu.style.display = 'none';
+                    infoCard.style.display = 'none';
+                    pointer.setAttribute('visible', false);
+                    
+                    // Resetear etiquetas
                     labelsVisible = false;
-                    labels.forEach(function(label) {
-                        label.setAttribute('visible', false);
-                    });
+                    labels.forEach(l => l.setAttribute('visible', false));
                     htmlButton.textContent = 'Ver Info';
-                    
-                    // --- NUEVO: Resetear colores si estaban cambiados ---
-                    if (highContrast) {
-                        highContrast = false; // Resetea el estado
-                        colorButton.textContent = 'Contraste';
-                        // Volver a original
-                        standardBgs.forEach(bg => bg.setAttribute('material', 'color', '#000000'));
-                        standardTexts.forEach(txt => txt.setAttribute('text', 'color', '#00AEEF'));
-                        specialBg.setAttribute('material', 'color', '#FF0000');
-                        specialText.setAttribute('text', 'color', '#FFFFFF');
-                    }
                 });
 
-                // --- Listener de clic en el botón de VISIBILIDAD ---
+                // --- BOTÓN: VER/OCULTAR ETIQUETAS ---
                 htmlButton.addEventListener('click', function(evt) {
-                    console.log('Botón Visibilidad presionado');
                     evt.stopPropagation();
-                    labelsVisible = !labelsVisible; // Alternar estado
-
-                    if (labelsVisible) {
-                        labels.forEach(label => label.setAttribute('visible', true));
-                        htmlButton.textContent = 'Ocultar Info';
-                    } else {
-                        labels.forEach(label => label.setAttribute('visible', false));
-                        htmlButton.textContent = 'Ver Info';
-                    }
+                    labelsVisible = !labelsVisible;
+                    labels.forEach(label => label.setAttribute('visible', labelsVisible));
+                    htmlButton.textContent = labelsVisible ? 'Ocultar Info' : 'Ver Info';
                 });
-                
-                // --- NUEVO: Listener de clic en el botón de COLOR ---
-                colorButton.addEventListener('click', function(evt) {
-                    console.log('Botón Color presionado');
-                    evt.stopPropagation();
-                    highContrast = !highContrast; // Alternar estado de contraste
 
-                    if (highContrast) {
-                        // Aplicar alto contraste (Fondo Blanco, Texto Oscuro)
-                        colorButton.textContent = 'Original';
-                        standardBgs.forEach(bg => bg.setAttribute('material', 'color', '#FFFFFF'));
-                        standardTexts.forEach(txt => txt.setAttribute('text', 'color', '#000000'));
-                        specialBg.setAttribute('material', 'color', '#FFFFFF');
-                        specialText.setAttribute('text', 'color', '#FF0000'); // Texto rojo sobre blanco
-                    } else {
-                        // Volver a original (Fondo Oscuro/Rojo, Texto Claro)
-                        colorButton.textContent = 'Contraste';
-                        standardBgs.forEach(bg => bg.setAttribute('material', 'color', '#000000'));
-                        standardTexts.forEach(txt => txt.setAttribute('text', 'color', '#00AEEF'));
-                        specialBg.setAttribute('material', 'color', '#FF0000');
-                        specialText.setAttribute('text', 'color', '#FFFFFF');
-                    }
+                // --- BOTÓN: CONTRASTE ---
+                colorButton.addEventListener('click', function(evt) {
+                    evt.stopPropagation();
+                    highContrast = !highContrast;
+                    const bgColor = highContrast ? '#FFFFFF' : '#000000';
+                    const txtColor = highContrast ? '#000000' : '#00AEEF';
+
+                    document.querySelectorAll('.label-bg').forEach(bg => bg.setAttribute('material', 'color', bgColor));
+                    document.querySelectorAll('.label-text').forEach(txt => txt.setAttribute('text', 'color', txtColor));
+                    
+                    // Manejo especial para la etiqueta "Tu estas aqui" (Rojo/Blanco)
+                    const specialBg = document.querySelector('.label-bg-special');
+                    const specialTxt = document.querySelector('.label-text-special');
+                    if(specialBg) specialBg.setAttribute('material', 'color', highContrast ? '#FFFFFF' : '#FF0000');
+                    if(specialTxt) specialTxt.setAttribute('text', 'color', highContrast ? '#FF0000' : '#FFFFFF');
+
+                    colorButton.textContent = highContrast ? 'Original' : 'Contraste';
                 });
             }
         });
     </script>
 </head>
 
-<body style="margin: 0px; overflow: hidden;">
+<body>
 
-    <div id="status-message" class="message-box">
-        Por favor, permite el acceso a la cámara y escanea el Código QR del campus.
+    <div class="ui-container">
+        
+        <div id="status-message" class="message-box">
+            Por favor, permite el acceso a la cámara y escanea el Código QR.
+        </div>
+
+        <div id="info-card" class="info-card">
+            <span class="close-card">&times;</span>
+            <h2 id="card-title">Título</h2>
+            <p id="card-desc">Descripción aquí.</p>
+        </div>
+
+        <div class="building-menu">
+            <button id="btn-ema" class="building-btn" onclick="selectBuilding('ema')">EMA</button>
+            <button id="btn-arpa" class="building-btn" onclick="selectBuilding('arpa')">ARPA 3</button>
+            <button id="btn-danza" class="building-btn" onclick="selectBuilding('danza')">Danza</button>
+            <button id="btn-musica" class="building-btn" onclick="selectBuilding('musica')">Música</button>
+        </div>
+
+        <div class="bottom-controls">
+            <button id="html-toggle-button" class="ar-button">Ver Info</button>
+            <button id="html-color-button" class="ar-button">Contraste</button>
+        </div>
     </div>
 
-    <button id="html-toggle-button" class="ar-button">Ver Info</button>
-    <button id="html-color-button" class="ar-button">Contraste</button> <a-scene 
+    <a-scene 
         id="ar-scene"
         vr-mode-ui="enabled: false;" 
         embedded 
-        arjs='sourceType: webcam; 
-              detectionMode: mono; 
-              patternRatio: 0.9; 
-              maxDetectionRate: 60; 
-              cameraParametersUrl: camera_para.dat;' 
+        arjs='sourceType: webcam; detectionMode: mono; patternRatio: 0.9; maxDetectionRate: 60; cameraParametersUrl: camera_para.dat;' 
         loading-screen="enabled: false;">
 
         <a-light type="ambient" color="#CCC"></a-light>
         <a-light type="directional" position="1 2 4" color="#FFF"></a-light>
 
-        <a-marker 
-            type='pattern' 
-            url='campus_qr.patt'> 
+        <a-marker type='pattern' url='campus_qr.patt'>
             
-            <a-entity 
-                campus-ar-manager 
-                visible="false"
-                rotation="-90 0 0" 
-                position="0 0 0"
-                scale="0.4 0.4 0.4"> 
+            <a-entity campus-ar-manager visible="false" rotation="-90 0 0" position="0 0 0" scale="0.4 0.4 0.4">
                 
-                <a-gltf-model 
-                    src="mapa.glb" 
-                    id="campus-model"
-                    position="0 0 0" 
-                    scale=".2 .2 .2"
-                    rotation="90 0 0"> 
-                </a-gltf-model>
+                <a-gltf-model src="mapa.glb" id="campus-model" position="0 0 0" scale=".2 .2 .2" rotation="90 0 0"></a-gltf-model>
+
+                <a-entity id="3d-pointer" position="0 0 0" visible="false">
+                    <a-cone color="#FFD700" radius-bottom="0.01" radius-top="0.15" height="0.4" position="0 0 0" opacity="0.9"></a-cone>
+                    <a-entity animation="property: position; to: 0 0.1 0; dir: alternate; loop: true; dur: 800"></a-entity>
+                </a-entity>
 
                 <a-entity position="0.7 .65 .5" class="label-group" visible="false" scale="1 1 1">
-                    <a-sphere 
-                        color="#FF0000" 
-                        radius="0.06" 
-                        position="0. 0.2 -0.38" 
-                        rotation="0 0 0">
-                    </a-sphere>
-                    <a-entity position="0.35 0.15 0" rotation="0 0 0">
-                        <a-plane
-                            class="label-bg-special" width=".6"
-                            height="0.2"
-                            color="#FF0000"
-                            position="0 0 -0.01">
-                        </a-plane>
-                        <a-text 
-                            class="label-text-special" value="Tu estas aqui" 
-                            align="center" 
-                            color="#FFFFFF"
-                            width="1.6"
-                            font="roboto"
-                            shader="msdf">
-                        </a-text>
+                    <a-sphere color="#FF0000" radius="0.06" position="0. 0.2 -0.38"></a-sphere>
+                    <a-entity position="0.35 0.15 0">
+                        <a-plane class="label-bg-special" width=".6" height="0.2" color="#FF0000" position="0 0 -0.01"></a-plane>
+                        <a-text class="label-text-special" value="Tu estas aqui" align="center" color="#FFFFFF" width="1.6" font="roboto" shader="msdf"></a-text>
                     </a-entity>
                 </a-entity>
 
-
-                <a-entity position=".45 -.1 0.5" rotation="0 0 0" scale="1 1 1" class="label-group" visible="false">
-                    <a-plane
-                        class="label-bg" width="0.8"
-                        height="0.3"
-                        color="#000000"
-                        opacity="0.9"
-                        position="0 0 -0.01">
-                    </a-plane>
-                    <a-text 
-                        class="label-text" value="EMA" 
-                        align="center" 
-                        color="#00AEEF"
-                        width="1.8"
-                        font="roboto"
-                        shader="msdf">
-                    </a-text>
+                <a-entity position=".45 -.1 0.5" class="label-group" visible="false">
+                    <a-plane class="label-bg" width="0.8" height="0.3" color="#000000" opacity="0.9" position="0 0 -0.01"></a-plane>
+                    <a-text class="label-text" value="EMA" align="center" color="#00AEEF" width="1.8" font="roboto" shader="msdf"></a-text>
                 </a-entity>
                 
-                <a-entity position="-0.035 -0.55 0.5" rotation="0 0 0" scale="1 1 1" class="label-group" visible="false">
-                    <a-plane
-                        class="label-bg" width="0.8"
-                        height="0.3"
-                        color="#000000"
-                        opacity="0.9"
-                        position="0 0 -0.01">
-                    </a-plane>
-                    <a-text 
-                        class="label-text" value="ARPA 3" 
-                        align="center" 
-                        color="#00AEEF"
-                        width="1.8"
-                        font="roboto"
-                        shader="msdf">
-                    </a-text>
+                <a-entity position="-0.035 -0.55 0.5" class="label-group" visible="false">
+                    <a-plane class="label-bg" width="0.8" height="0.3" color="#000000" opacity="0.9" position="0 0 -0.01"></a-plane>
+                    <a-text class="label-text" value="ARPA 3" align="center" color="#00AEEF" width="1.8" font="roboto" shader="msdf"></a-text>
                 </a-entity>
                 
-                <a-entity position="-0.6 -0.1 0.5" rotation="0 0 0" scale="1 1 1" class="label-group" visible="false">
-                    <a-plane
-                        class="label-bg" width="0.8"
-                        height="0.3"
-                        color="#000000"
-                        opacity="0.9"
-                        position="0 0 -0.01">
-                    </a-plane>
-                    <a-text 
-                        class="label-text" value="Danza" 
-                        align="center" 
-                        color="#00AEEF"
-                        width="1.8"
-                        font="roboto"
-                        shader="msdf">
-                    </a-text>
+                <a-entity position="-0.6 -0.1 0.5" class="label-group" visible="false">
+                    <a-plane class="label-bg" width="0.8" height="0.3" color="#000000" opacity="0.9" position="0 0 -0.01"></a-plane>
+                    <a-text class="label-text" value="Danza" align="center" color="#00AEEF" width="1.8" font="roboto" shader="msdf"></a-text>
                 </a-entity>
 
-                <a-entity position="0.25 1.1 0.5" rotation="0 0 0" scale="1 1 1" class="label-group" visible="false">
-                    <a-plane
-                        class="label-bg" width="0.8"
-                        height="0.3"
-                        color="#000000"
-                        opacity="0.9"
-                        position="0 0 -0.01">
-                    </a-plane>
-                    <a-text 
-                        class="label-text" value="Musica" 
-                        align="center" 
-                        color="#00AEEF"
-                        width="1.8"
-                        font="roboto"
-                        shader="msdf">
-                    </a-text>
+                <a-entity position="0.25 1.1 0.5" class="label-group" visible="false">
+                    <a-plane class="label-bg" width="0.8" height="0.3" color="#000000" opacity="0.9" position="0 0 -0.01"></a-plane>
+                    <a-text class="label-text" value="Musica" align="center" color="#00AEEF" width="1.8" font="roboto" shader="msdf"></a-text>
                 </a-entity>
-
 
             </a-entity>
         </a-marker>
@@ -302,6 +332,7 @@
     </a-scene>
 </body>
 </html>
+
 
 
 
