@@ -75,8 +75,8 @@
         const buildingsData = {
             "ema": { title: "Edificio EMA", desc: "Nivel 1: Biblioteca y salones de Danza. Nivel 2: Computadoras. Nivel 3 a 5: Salones normales", position: "0.45 -0.1 0.6" },
             "arpa": { title: "ARPA 3", desc: "Salón para stop motion, salón con pantalla verde, administración arpa.", position: "-0.035 -0.55 0.6" },
-            "dramatico": { title: "Facultad de Danza", desc: "Edificio de la licenciatura de Arte Dramatico.", position: "-0.6 -0.1 0.6" },
-            "musica": { title: "Conservatorio", desc: "Edificio de la facultad de Música.", position: "0.25 1.1 0.6" }
+            "dramatico": { title: "Arte dramatico", desc: "Edificio de la licenciatura de Arte Dramatico.", position: "-0.6 -0.1 0.6" },
+            "musica": { title: "Musica", desc: "Edificio de la facultad de Música.", position: "0.25 1.1 0.6" }
         };
 
         AFRAME.registerComponent('campus-ar-manager', {
@@ -212,8 +212,8 @@
         <div class="building-menu">
             <button id="btn-ema" class="building-btn" onclick="selectBuilding('ema')">EMA</button>
             <button id="btn-arpa" class="building-btn" onclick="selectBuilding('arpa')">ARPA 3</button>
-            <button id="btn-dramatico" class="building-btn" onclick="selectBuilding('dramatico')">Danza</button>
-            <button id="btn-musica" class="building-btn" onclick="selectBuilding('musica')">Música</button>
+            <button id="btn-dramatico" class="building-btn" onclick="selectBuilding('dramatico')">Dramatico</button>
+            <button id="btn-musica" class="building-btn" onclick="selectBuilding('musica')">Musica</button>
         </div>
 
         <div class="bottom-controls">
@@ -272,6 +272,7 @@
     </a-scene>
 </body>
 </html>
+
 
 
 
