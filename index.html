@@ -75,7 +75,7 @@
         const buildingsData = {
             "ema": { title: "Edificio EMA", desc: "Nivel 1: Biblioteca y salones de Danza. Nivel 2: Computadoras. Nivel 3 a 5: Salones normales", position: "0.45 -0.1 0.6" },
             "arpa": { title: "ARPA 3", desc: "Salón para stop motion, salón con pantalla verde, administración arpa.", position: "-0.035 -0.55 0.6" },
-            "danza": { title: "Facultad de Danza", desc: "Edificio de la facultad de Danza.", position: "-0.6 -0.1 0.6" },
+            "dramatico": { title: "Facultad de Danza", desc: "Edificio de la licenciatura de Arte Dramatico.", position: "-0.6 -0.1 0.6" },
             "musica": { title: "Conservatorio", desc: "Edificio de la facultad de Música.", position: "0.25 1.1 0.6" }
         };
 
@@ -212,7 +212,7 @@
         <div class="building-menu">
             <button id="btn-ema" class="building-btn" onclick="selectBuilding('ema')">EMA</button>
             <button id="btn-arpa" class="building-btn" onclick="selectBuilding('arpa')">ARPA 3</button>
-            <button id="btn-danza" class="building-btn" onclick="selectBuilding('danza')">Danza</button>
+            <button id="btn-dramatico" class="building-btn" onclick="selectBuilding('dramatico')">Danza</button>
             <button id="btn-musica" class="building-btn" onclick="selectBuilding('musica')">Música</button>
         </div>
 
@@ -258,7 +258,7 @@
 
                 <a-entity position="-0.6 -0.1 0.5" class="label-group" visible="false">
                     <a-plane class="label-bg" width="0.8" height="0.3" color="#000000" opacity="0.9" position="0 0 -0.01"></a-plane>
-                    <a-text class="label-text" value="Danza" align="center" color="#00AEEF" width="1.8" font="roboto" shader="msdf"></a-text>
+                    <a-text class="label-text" value="Dramatico" align="center" color="#00AEEF" width="1.8" font="roboto" shader="msdf"></a-text>
                 </a-entity>
 
                 <a-entity position="0.25 1.1 0.5" class="label-group" visible="false">
@@ -272,6 +272,7 @@
     </a-scene>
 </body>
 </html>
+
 
 
 
