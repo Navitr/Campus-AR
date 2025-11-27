@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8">
@@ -74,7 +74,8 @@
         #btn-toggle-info { background-color: #0077FF; } /* Azul */
         #btn-toggle-pointer { background-color: #FF9800; } /* Naranja */
         #btn-toggle-user { background-color: #9C27B0; } /* Morado */
-        #btn-contrast { background-color: #4CAF50; font-size: 18px; padding: 6px 12px; } /* Verde Emoji */
+        /* Botón de contraste con estilo para Emoji */
+        #btn-contrast { background-color: #4CAF50; font-size: 18px; padding: 6px 12px; } 
         #btn-alt-names { background-color: #673AB7; } /* Morado Oscuro */
 
         /* Botón Flotante para Ocultar UI */
@@ -89,7 +90,7 @@
     </style>
 
     <script>
-        // --- 1. DATOS (Coordenadas exactas conservadas) ---
+        // --- DATOS (Ubicaciones exactas) ---
         const buildingsData = {
             "ema": { 
                 title: "Edificio EMA", altTitle: "EMA", 
@@ -123,7 +124,7 @@
             },
             "cafeteria": { 
                 title: "Cafeteria", altTitle: "Cafeteria", 
-                desc: "Área de comida, mesas y descanso.", 
+                desc: "Área de comida y mesas.", 
                 position: "0.0 -0.95 0.5" 
             }
         };
@@ -158,24 +159,21 @@
                     const data = buildingsData[key];
                     if (!data) return;
 
-                    // Mostrar Info
+                    // 1. Mostrar Info en Tarjeta
                     cardTitle.textContent = altNamesVisible ? data.altTitle : data.title;
                     cardDesc.textContent = data.desc;
                     infoCard.style.display = 'block';
 
-                    // --- AJUSTE DEL PUNTERO ---
-                    // 1. Parsear la posición original de la etiqueta
-                    const pos = data.position.split(' ').map(parseFloat);
-                    // 2. Calcular nueva posición: Misma X, Misma Z, pero Y (altura) + 0.3
-                    // Nota: En esta rotación, la "altura" visual es el eje Y.
-                    const pointerPos = `${pos[0]} ${pos[1] + 0.3} ${pos[2]}`;
-
+                    // 2. Mover Puntero (CORREGIDO)
+                    // Colocamos el contenedor del puntero exactamente en la posición de la etiqueta.
+                    // La altura visual (Z) se maneja dentro de la animación del puntero en el HTML.
                     pointer.setAttribute('visible', true);
-                    pointer.setAttribute('position', pointerPos);
+                    pointer.setAttribute('position', data.position);
+                    
                     pointerVisible = true; 
                     updateButtonText('btn-toggle-pointer', 'Ocultar Puntero');
 
-                    // UI Botones Activos
+                    // 3. Actualizar Botones Activos
                     document.querySelectorAll('.building-btn').forEach(b => b.classList.remove('active'));
                     const btn = document.getElementById('btn-' + key);
                     if(btn) btn.classList.add('active');
@@ -212,15 +210,16 @@
                     e.stopPropagation();
                     highContrast = !highContrast;
                     applyStyle();
+                    // Cambia entre Luna (Normal) y Paleta (Contraste)
                     e.target.textContent = highContrast ? '🎨' : '🌗';
                 });
 
-                // E. Nombres Alternativos
+                // E. Nombres Alternativos (AHORA ACTUALIZA EL MENÚ)
                 document.getElementById('btn-alt-names').addEventListener('click', (e) => {
                     e.stopPropagation();
                     altNamesVisible = !altNamesVisible;
                     updateLabelsText(); // Actualiza etiquetas 3D
-                    updateMenuButtons(); // Actualiza botones del menú lateral
+                    updateMenuButtons(); // Actualiza menú lateral
                     e.target.textContent = altNamesVisible ? 'Nombres Comunes' : 'Nombres Alt.';
                 });
 
@@ -263,11 +262,12 @@
                     }
                 }
 
-                // Helper: Actualiza BOTONES MENÚ (NUEVO)
+                // Helper: Actualiza BOTONES DEL MENÚ (NUEVO)
                 function updateMenuButtons() {
                     for (const [key, data] of Object.entries(buildingsData)) {
                         const btn = document.getElementById('btn-' + key);
                         if (btn) {
+                            // Actualizamos el texto del botón derecho
                             btn.textContent = altNamesVisible ? data.altTitle : data.title;
                         }
                     }
@@ -328,6 +328,7 @@
             <button id="btn-alt-names" class="ar-button">Nombres Alt.</button>
             <button id="btn-toggle-pointer" class="ar-button">Ver Puntero</button>
             <button id="btn-toggle-user" class="ar-button">Ver Ubicación</button>
+            <!-- Botón Contraste con Emoji -->
             <button id="btn-contrast" class="ar-button">🌗</button>
         </div>
     </div>
@@ -342,12 +343,20 @@
                 <!-- Modelo -->
                 <a-gltf-model src="mapa.glb" position="0 0 -0.2" scale=".055 .055 .055" rotation="90 0 0"></a-gltf-model>
 
-                <!-- Puntero Amarillo -->
+                <!-- 
+                    PUNTERO AMARILLO CORREGIDO:
+                    - Se posiciona vía JS en el centro de la etiqueta.
+                    - El cono y la animación operan en el eje Z (que es la altura visual en este sistema rotado).
+                    - rotation="-90 0 0" orienta la punta del cono hacia abajo (hacia el mapa).
+                -->
                 <a-entity id="3d-pointer" position="0 0 0" visible="false">
                     <a-cone 
-                        color="#FFD700" radius-bottom="0.01" radius-top="0.08" height="0.25" 
-                        position="0 0.125 0" opacity="0.9" rotation="0 0 0"
-                        animation="property: position; from: 0 0.125 0; to: 0 0.3 0; dir: alternate; loop: true; dur: 800; easing: easeInOutQuad">
+                        color="#FFD700" 
+                        radius-bottom="0.01" radius-top="0.08" height="0.25" 
+                        position="0 0 0" 
+                        rotation="-90 0 0"
+                        opacity="0.9"
+                        animation="property: position; from: 0 0 0.4; to: 0 0 0.6; dir: alternate; loop: true; dur: 700; easing: easeInOutQuad">
                     </a-cone>
                 </a-entity>
 
@@ -363,7 +372,7 @@
                 <!-- ETIQUETAS -->
                 <a-entity position=".9 -.6 0.5" class="label-group" visible="false">
                     <a-plane class="label-bg" width="0.8" height="0.3" color="#000000" opacity="0.9" position="0 0 -0.01"></a-plane>
-                    <a-text id="label-text-ema" class="label-text" value="Edificio EMA" align="center" color="#00AEEF" width="1.8" font="roboto" shader="msdf"></a-text>
+                    <a-text id="label-text-ema" class="label-text" value="EMA" align="center" color="#00AEEF" width="1.8" font="roboto" shader="msdf"></a-text>
                 </a-entity>
                 
                 <a-entity position=".2 -1.2 0.5" class="label-group" visible="false">
@@ -383,7 +392,7 @@
 
                 <a-entity position="-.58 0.3 0.5" class="label-group" visible="false">
                     <a-plane class="label-bg" width="0.8" height="0.3" color="#000000" opacity="0.9" position="0 0 -0.01"></a-plane>
-                    <a-text id="label-text-danza" class="label-text" value="Lic. en Danza" align="center" color="#00AEEF" width="1.8" font="roboto" shader="msdf"></a-text>
+                    <a-text id="label-text-danza" class="label-text" value="Danza" align="center" color="#00AEEF" width="1.8" font="roboto" shader="msdf"></a-text>
                 </a-entity>
 
                 <a-entity position="-0.7 1.1 0.5" class="label-group" visible="false">
