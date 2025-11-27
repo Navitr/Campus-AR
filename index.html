@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8">
@@ -90,42 +90,42 @@
     </style>
 
     <script>
-        // --- DATOS (Ubicaciones exactas) ---
+        // --- DATOS CORREGIDOS (Sincronizados con las etiquetas del HTML) ---
         const buildingsData = {
             "ema": { 
                 title: "Edificio EMA", altTitle: "EMA", 
                 desc: "Nivel 1: Biblioteca Central. Nivel 2: Computadoras. Nivel 3-5: Salones.", 
-                position: "0.45 -0.1 0.5" 
+                position: "0.9 -0.6 0.5" 
             },
             "arpa": { 
                 title: "ARPA 3", altTitle: "ARPA 3", 
                 desc: "Salón para stop motion, pantalla verde y administración.", 
-                position: "-0.035 -0.55 0.5" 
+                position: "0.2 -1.2 0.5" 
             },
             "dramatico": { 
                 title: "Arte Dramatico", altTitle: "ART 4", 
                 desc: "Escenarios y salones de práctica teatral.", 
-                position: "-0.6 -0.1 0.5" 
+                position: "-0.35 -0.55 0.5" 
             },
             "musica": { 
                 title: "Musica", altTitle: "ART 3", 
                 desc: "Salones acústicos y cubículos de ensayo.", 
-                position: "0.25 1.1 0.5" 
+                position: "0.55 1.1 0.5" 
             },
             "danza": { 
                 title: "Danza", altTitle: "ART 2", 
-                desc: "Duelas de práctica salones teóricos.", 
-                position: "0.8 0.3 0.5" 
+                desc: "Duelas de práctica, vestidores y salones teóricos.", 
+                position: "-0.58 0.3 0.5" 
             },
             "etno": { 
                 title: "Etnocoreologia", altTitle: "ART 1", 
-                desc: "Investigación de danza tradicional y salones.", 
-                position: "-0.8 0.4 0.5" 
+                desc: "Investigación de danza tradicional y archivo.", 
+                position: "-0.7 1.1 0.5" 
             },
             "cafeteria": { 
                 title: "Cafeteria", altTitle: "Cafeteria", 
-                desc: "Área de comida y mesas.", 
-                position: "0.0 -0.95 0.5" 
+                desc: "Área de comida, mesas y descanso.", 
+                position: "-0.72 -0.28 0.5" 
             }
         };
 
@@ -166,9 +166,16 @@
 
                     // 2. Mover Puntero (CORREGIDO)
                     // Colocamos el contenedor del puntero exactamente en la posición de la etiqueta.
-                    // La altura visual (Z) se maneja dentro de la animación del puntero en el HTML.
+                    const posCoords = data.position.split(' ');
+                    const x = parseFloat(posCoords[0]);
+                    const y = parseFloat(posCoords[1]); 
+                    const z = parseFloat(posCoords[2]); 
+
                     pointer.setAttribute('visible', true);
-                    pointer.setAttribute('position', data.position);
+                    
+                    // La posición del contenedor del puntero es la misma que la etiqueta
+                    // El "offset" de altura se maneja en la animación Z del cono interno
+                    pointer.setAttribute('position', `${x} ${y} ${z}`);
                     
                     pointerVisible = true; 
                     updateButtonText('btn-toggle-pointer', 'Ocultar Puntero');
@@ -345,8 +352,8 @@
 
                 <!-- 
                     PUNTERO AMARILLO CORREGIDO:
-                    - Se posiciona vía JS en el centro de la etiqueta.
-                    - El cono y la animación operan en el eje Z (que es la altura visual en este sistema rotado).
+                    - El puntero se mueve a la posición de la etiqueta.
+                    - La animación ocurre en el eje Z (altura visual)
                     - rotation="-90 0 0" orienta la punta del cono hacia abajo (hacia el mapa).
                 -->
                 <a-entity id="3d-pointer" position="0 0 0" visible="false">
