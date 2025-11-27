@@ -324,10 +324,10 @@
         <a-light type="directional" position="1 2 4" color="#FFF"></a-light>
 
         <a-marker type='pattern' url='campus_qr.patt'>
-            <a-entity campus-ar-manager visible="false" rotation="-90 0 0" position="0 0 0" scale="0.5 0.5 0.5">
+            <a-entity campus-ar-manager visible="false" rotation="-90 0 0" position="0 0 0" scale="0.6 0.6 0.6">
                 
                 <!-- Modelo -->
-                <a-gltf-model src="mapa.glb" position="0 0 0" scale=".055 .055 .055" rotation="90 0 0"></a-gltf-model>
+                <a-gltf-model src="mapa.glb" position="0 0 -0.2" scale=".055 .055 .055" rotation="90 0 0"></a-gltf-model>
 
                 <!-- Puntero Amarillo (Ahora se mueve exactamente a la posición de la etiqueta) -->
                 <a-entity id="3d-pointer" position="0 0 0" visible="false">
@@ -338,7 +338,7 @@
                 </a-entity>
 
                 <!-- Ubicación Usuario -->
-                <a-entity id="user-location" position="0.8 .5 .5" visible="false" scale="1 1 1">
+                <a-entity id="user-location" position="0.9 .5 .5" visible="false" scale="1 1 1">
                     <a-sphere color="#FF0000" radius="0.06" position="0. 0.2 -0.38"></a-sphere>
                     <a-entity position="0.35 0.15 0">
                         <a-plane class="label-bg-special" width=".6" height="0.2" color="#FF0000" position="0 0 -0.01"></a-plane>
@@ -349,43 +349,43 @@
                 <!-- ETIQUETAS (Se les añadió ID único para cambiar texto) -->
                 
                 <!-- EMA -->
-                <a-entity position=".55 -.4 0.5" class="label-group" visible="false">
+                <a-entity position=".65 -.55 0.5" class="label-group" visible="false">
                     <a-plane class="label-bg" width="0.8" height="0.3" color="#000000" opacity="0.9" position="0 0 -0.01"></a-plane>
                     <a-text id="label-text-ema" class="label-text" value="Edificio EMA" align="center" color="#00AEEF" width="1.8" font="roboto" shader="msdf"></a-text>
                 </a-entity>
                 
                 <!-- ARPA 3 -->
-                <a-entity position=".5 -0.8 0.5" class="label-group" visible="false">
+                <a-entity position=".1 -1 0.5" class="label-group" visible="false">
                     <a-plane class="label-bg" width="0.8" height="0.3" color="#000000" opacity="0.9" position="0 0 -0.01"></a-plane>
                     <a-text id="label-text-arpa" class="label-text" value="ARPA 3" align="center" color="#00AEEF" width="1.8" font="roboto" shader="msdf"></a-text>
                 </a-entity>
 
                 <!-- Dramatico -->
-                <a-entity position="-0.4 -0.3 0.5" class="label-group" visible="false">
+                <a-entity position="-0.38 -0.5 0.5" class="label-group" visible="false">
                     <a-plane class="label-bg" width="0.9" height="0.3" color="#000000" opacity="0.9" position="0 0 -0.01"></a-plane>
                     <a-text id="label-text-dramatico" class="label-text" value="Arte Dramatico" align="center" color="#00AEEF" width="1.8" font="roboto" shader="msdf"></a-text>
                 </a-entity>
 
                 <!-- Musica -->
-                <a-entity position="0.35 .9 0.5" class="label-group" visible="false">
+                <a-entity position="0.45 1 0.5" class="label-group" visible="false">
                     <a-plane class="label-bg" width="0.8" height="0.3" color="#000000" opacity="0.9" position="0 0 -0.01"></a-plane>
                     <a-text id="label-text-musica" class="label-text" value="Musica" align="center" color="#00AEEF" width="1.8" font="roboto" shader="msdf"></a-text>
                 </a-entity>
 
                 <!-- Danza -->
-                <a-entity position="-.5 0.3 0.5" class="label-group" visible="false">
+                <a-entity position="-.55 0.3 0.5" class="label-group" visible="false">
                     <a-plane class="label-bg" width="0.8" height="0.3" color="#000000" opacity="0.9" position="0 0 -0.01"></a-plane>
                     <a-text id="label-text-danza" class="label-text" value="Lic. en Danza" align="center" color="#00AEEF" width="1.8" font="roboto" shader="msdf"></a-text>
                 </a-entity>
 
                 <!-- Etnocoreología -->
-                <a-entity position="-0.7 0.9 0.5" class="label-group" visible="false">
+                <a-entity position="-0.7 1 0.5" class="label-group" visible="false">
                     <a-plane class="label-bg" width="1.0" height="0.3" color="#000000" opacity="0.9" position="0 0 -0.01"></a-plane>
                     <a-text id="label-text-etno" class="label-text" value="Etnocoreologia" align="center" color="#00AEEF" width="1.6" font="roboto" shader="msdf"></a-text>
                 </a-entity>
 
                 <!-- Cafetería -->
-                <a-entity position="-0.65 -0.4 0.5" class="label-group" visible="false">
+                <a-entity position="-0.68 -0.33 0.5" class="label-group" visible="false">
                     <a-plane class="label-bg" width="0.8" height="0.3" color="#000000" opacity="0.9" position="0 0 -0.01"></a-plane>
                     <a-text id="label-text-cafeteria" class="label-text" value="Cafeteria" align="center" color="#00AEEF" width="1.8" font="roboto" shader="msdf"></a-text>
                 </a-entity>
@@ -396,6 +396,7 @@
     </a-scene>
 </body>
 </html>
+
 
 
 
