@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
-    <title>Mapa AR Campus - Controles Avanzados</title>
+    <title>Mapa AR Campus - Completo</title>
     
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@master/aframe/build/aframe-ar.js"></script>
@@ -72,11 +72,16 @@
     </style>
 
     <script>
+        // --- 1. DATOS ACTUALIZADOS CON NUEVAS UBICACIONES ---
         const buildingsData = {
-            "ema": { title: "Edificio EMA", desc: "Nivel 1: Biblioteca y salones de Danza. Nivel 2: Computadoras. Nivel 3 a 5: Salones normales", position: "0.45 -0.1 0.6" },
-            "arpa": { title: "ARPA 3", desc: "Salón para stop motion, salón con pantalla verde, administración arpa.", position: "-0.035 -0.55 0.6" },
-            "dramatico": { title: "Arte dramatico", desc: "Edificio de la licenciatura de Arte Dramatico.", position: "-0.6 -0.1 0.6" },
-            "musica": { title: "Musica", desc: "Edificio de la facultad de Música.", position: "0.25 1.1 0.6" }
+            "ema": { title: "Edificio EMA", desc: "Nivel 1: Biblioteca Central. Nivel 2: Computadoras. Nivel 3-5: Salones.", position: "0.45 -0.1 0.6" },
+            "arpa": { title: "ARPA 3", desc: "Salón para stop motion, pantalla verde y administración.", position: "-0.035 -0.55 0.6" },
+            "dramatico": { title: "Arte Dramático", desc: "Escenarios y salones de práctica teatral.", position: "-0.6 -0.1 0.6" },
+            "musica": { title: "Música", desc: "Salones acústicos y cubículos de ensayo.", position: "0.25 1.1 0.6" },
+            // NUEVAS UBICACIONES
+            "danza": { title: "Lic. en Danza", desc: "Duelas de práctica, vestidores y salones teóricos.", position: "0.8 0.3 0.6" },
+            "etno": { title: "Etnocoreología", desc: "Investigación de danza tradicional y archivo.", position: "-0.8 0.4 0.6" },
+            "cafeteria": { title: "Cafetería", desc: "Área de comida, mesas y descanso.", position: "0.0 -0.95 0.6" }
         };
 
         AFRAME.registerComponent('campus-ar-manager', {
@@ -92,16 +97,16 @@
                 
                 // Referencias 3D
                 const pointer = document.getElementById('3d-pointer');
-                const userLocation = document.getElementById('user-location'); // ID NUEVO
-                const labels = document.querySelectorAll('.label-group'); // Etiquetas normales
+                const userLocation = document.getElementById('user-location'); 
+                const labels = document.querySelectorAll('.label-group'); 
                 
                 // Estado
                 let labelsVisible = false;
                 let highContrast = false;
-                let pointerVisible = false; // Estado lógico del puntero
-                let userVisible = false; // Estado ubicación usuario
+                let pointerVisible = false;
+                let userVisible = false;
 
-                // --- 1. SELECCIÓN DE EDIFICIO ---
+                // --- FUNCIÓN DE SELECCIÓN ---
                 window.selectBuilding = function(key) {
                     const data = buildingsData[key];
                     if (!data) return;
@@ -111,7 +116,7 @@
                     cardDesc.textContent = data.desc;
                     infoCard.style.display = 'block';
 
-                    // Activar Puntero (Siempre se activa al seleccionar nuevo edificio)
+                    // Mover y Mostrar Puntero
                     pointer.setAttribute('visible', true);
                     pointer.setAttribute('position', data.position);
                     pointerVisible = true; 
@@ -119,12 +124,13 @@
 
                     // UI Botones
                     document.querySelectorAll('.building-btn').forEach(b => b.classList.remove('active'));
-                    document.getElementById('btn-' + key).classList.add('active');
+                    const btn = document.getElementById('btn-' + key);
+                    if(btn) btn.classList.add('active');
                 };
 
-                // --- 2. BOTONES DE CONTROL ---
+                // --- CONTROLES DE BOTONES ---
                 
-                // A. Etiquetas (Info General)
+                // A. Etiquetas
                 document.getElementById('btn-toggle-info').addEventListener('click', (e) => {
                     e.stopPropagation();
                     labelsVisible = !labelsVisible;
@@ -132,7 +138,7 @@
                     e.target.textContent = labelsVisible ? 'Ocultar Info' : 'Ver Info';
                 });
 
-                // B. Puntero (Cono)
+                // B. Puntero
                 document.getElementById('btn-toggle-pointer').addEventListener('click', (e) => {
                     e.stopPropagation();
                     pointerVisible = !pointerVisible;
@@ -140,7 +146,7 @@
                     updateButtonText(e.target.id, pointerVisible ? 'Ocultar Puntero' : 'Ver Puntero');
                 });
 
-                // C. Ubicación Usuario (Esfera)
+                // C. Ubicación Usuario
                 document.getElementById('btn-toggle-user').addEventListener('click', (e) => {
                     e.stopPropagation();
                     userVisible = !userVisible;
@@ -168,7 +174,6 @@
                     e.target.textContent = highContrast ? 'Original' : 'Contraste';
                 });
 
-                // Helper para texto de botones
                 function updateButtonText(id, text) {
                     document.getElementById(id).textContent = text;
                 }
@@ -176,12 +181,10 @@
                 // Cerrar tarjeta
                 document.querySelector('.close-card').addEventListener('click', () => {
                     infoCard.style.display = 'none';
-                    // Opcional: Ocultar puntero al cerrar tarjeta
-                    // pointer.setAttribute('visible', false); 
                     document.querySelectorAll('.building-btn').forEach(b => b.classList.remove('active'));
                 });
 
-                // --- MARCADOR ---
+                // --- EVENTOS DEL MARCADOR ---
                 marker.addEventListener('markerFound', () => {
                     document.getElementById('status-message').textContent = '¡Mapa detectado!';
                     self.el.setAttribute('visible', true);
@@ -212,8 +215,12 @@
         <div class="building-menu">
             <button id="btn-ema" class="building-btn" onclick="selectBuilding('ema')">EMA</button>
             <button id="btn-arpa" class="building-btn" onclick="selectBuilding('arpa')">ARPA 3</button>
-            <button id="btn-dramatico" class="building-btn" onclick="selectBuilding('dramatico')">Dramatico</button>
-            <button id="btn-musica" class="building-btn" onclick="selectBuilding('musica')">Musica</button>
+            <button id="btn-dramatico" class="building-btn" onclick="selectBuilding('dramatico')">Dramático</button>
+            <button id="btn-musica" class="building-btn" onclick="selectBuilding('musica')">Música</button>
+            <!-- NUEVOS BOTONES -->
+            <button id="btn-danza" class="building-btn" onclick="selectBuilding('danza')">Danza</button>
+            <button id="btn-etno" class="building-btn" onclick="selectBuilding('etno')">Etnocoreología</button>
+            <button id="btn-cafeteria" class="building-btn" onclick="selectBuilding('cafeteria')">Cafetería</button>
         </div>
 
         <div class="bottom-controls">
@@ -231,13 +238,16 @@
         <a-marker type='pattern' url='campus_qr.patt'>
             <a-entity campus-ar-manager visible="false" rotation="-90 0 0" position="0 0 0" scale="0.7 0.7 0.7">
                 
+                <!-- Modelo -->
                 <a-gltf-model src="mapa.glb" position="0 0 0" scale=".04 .04 .04" rotation="90 0 0"></a-gltf-model>
 
+                <!-- Puntero Amarillo (Móvil) -->
                 <a-entity id="3d-pointer" position="0 0 0" visible="false">
                     <a-cone color="#FFD700" radius-bottom="0.01" radius-top="0.08" height="0.25" position="0 0.2 0" opacity="0.9"></a-cone>
                     <a-entity animation="property: position; to: 0 0.2 0; dir: alternate; loop: true; dur: 800"></a-entity>
                 </a-entity>
 
+                <!-- Ubicación Usuario -->
                 <a-entity id="user-location" position="0.7 .65 .5" visible="false" scale="1 1 1">
                     <a-sphere color="#FF0000" radius="0.06" position="0. 0.2 -0.38"></a-sphere>
                     <a-entity position="0.35 0.15 0">
@@ -246,6 +256,7 @@
                     </a-entity>
                 </a-entity>
 
+                <!-- ETIQUETAS ORIGINALES -->
                 <a-entity position=".45 -.1 0.5" class="label-group" visible="false">
                     <a-plane class="label-bg" width="0.8" height="0.3" color="#000000" opacity="0.9" position="0 0 -0.01"></a-plane>
                     <a-text class="label-text" value="EMA" align="center" color="#00AEEF" width="1.8" font="roboto" shader="msdf"></a-text>
@@ -266,55 +277,29 @@
                     <a-text class="label-text" value="Musica" align="center" color="#00AEEF" width="1.8" font="roboto" shader="msdf"></a-text>
                 </a-entity>
 
+                <!-- NUEVAS ETIQUETAS -->
+                
+                <!-- Lic. Danza -->
+                <a-entity position="0.8 0.3 0.5" class="label-group" visible="false">
+                    <a-plane class="label-bg" width="0.8" height="0.3" color="#000000" opacity="0.9" position="0 0 -0.01"></a-plane>
+                    <a-text class="label-text" value="Danza" align="center" color="#00AEEF" width="1.8" font="roboto" shader="msdf"></a-text>
+                </a-entity>
+
+                <!-- Etnocoreología -->
+                <a-entity position="-0.8 0.4 0.5" class="label-group" visible="false">
+                    <a-plane class="label-bg" width="1.0" height="0.3" color="#000000" opacity="0.9" position="0 0 -0.01"></a-plane>
+                    <a-text class="label-text" value="Etnocoreologia" align="center" color="#00AEEF" width="1.6" font="roboto" shader="msdf"></a-text>
+                </a-entity>
+
+                <!-- Cafetería -->
+                <a-entity position="0.0 -0.95 0.5" class="label-group" visible="false">
+                    <a-plane class="label-bg" width="0.8" height="0.3" color="#000000" opacity="0.9" position="0 0 -0.01"></a-plane>
+                    <a-text class="label-text" value="Cafeteria" align="center" color="#00AEEF" width="1.8" font="roboto" shader="msdf"></a-text>
+                </a-entity>
+
             </a-entity>
         </a-marker>
         <a-entity camera></a-entity>
     </a-scene>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
